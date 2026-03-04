@@ -106,8 +106,8 @@ const SuperAdminDashboard: React.FC = () => {
   const [editingPackageId, setEditingPackageId] = useState<string | null>(null);
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [newUser, setNewUser] = useState<Partial<User>>({ role: UserRole.PROJECT_ADMIN, isActive: true });
-  const [newProject, setNewProject] = useState<Partial<Project>>({ 
-    status: ProjectStatus.ACTIVE, 
+  const [newProject, setNewProject] = useState<Partial<Project>>({
+    status: ProjectStatus.ACTIVE,
     additionalPhotos: [],
     name: '',
     address: '',
@@ -116,7 +116,8 @@ const SuperAdminDashboard: React.FC = () => {
     manager: '',
     homesCount: 0,
     deliveryDate: '',
-    internalRemarks: ''
+    internalRemarks: '',
+    logoUrl: ''
   });
   const [newPackage, setNewPackage] = useState<Partial<MasterPackage>>({ inclusions: [], projectId: '', category: 'Standaard', photos: [] });
   const [newCategoryInput, setNewCategoryInput] = useState('');
@@ -125,6 +126,7 @@ const SuperAdminDashboard: React.FC = () => {
 
   const projectPhotosRef = useRef<HTMLInputElement>(null);
   const packagePhotosRef = useRef<HTMLInputElement>(null);
+  const projectLogoRef = useRef<HTMLInputElement>(null);
 
   const refreshData = async () => {
     setIsLoading(true);
@@ -306,8 +308,8 @@ const SuperAdminDashboard: React.FC = () => {
       }
       setIsProjectModalOpen(false);
       setEditingProjectId(null);
-      setNewProject({ 
-        status: ProjectStatus.ACTIVE, 
+      setNewProject({
+        status: ProjectStatus.ACTIVE,
         additionalPhotos: [],
         name: '',
         address: '',
@@ -316,7 +318,8 @@ const SuperAdminDashboard: React.FC = () => {
         manager: '',
         homesCount: 0,
         deliveryDate: '',
-        internalRemarks: ''
+        internalRemarks: '',
+        logoUrl: ''
       });
       await refreshData();
       setFeedback({ title: "Project Opgeslagen", type: 'success' });
@@ -339,6 +342,19 @@ const SuperAdminDashboard: React.FC = () => {
       };
       reader.readAsDataURL(file);
     });
+  };
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setNewProject(prev => ({
+        ...prev,
+        logoUrl: reader.result as string
+      }));
+    };
+    reader.readAsDataURL(file);
   };
 
   const handlePackagePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -521,10 +537,10 @@ const SuperAdminDashboard: React.FC = () => {
           <div className="space-y-8 animate-in fade-in duration-300">
             <div className="flex justify-between items-center">
               <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Projectenoverzicht</h1>
-              <button onClick={() => { 
-                setEditingProjectId(null); 
-                setNewProject({ 
-                  status: ProjectStatus.ACTIVE, 
+              <button onClick={() => {
+                setEditingProjectId(null);
+                setNewProject({
+                  status: ProjectStatus.ACTIVE,
                   additionalPhotos: [],
                   name: '',
                   address: '',
@@ -533,9 +549,10 @@ const SuperAdminDashboard: React.FC = () => {
                   manager: '',
                   homesCount: 0,
                   deliveryDate: '',
-                  internalRemarks: ''
-                }); 
-                setIsProjectModalOpen(true); 
+                  internalRemarks: '',
+                  logoUrl: ''
+                });
+                setIsProjectModalOpen(true);
               }} className="px-6 py-3 bg-[#8C7864] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-[#8C7864]/20 active:scale-95 transition-all">Nieuw Project</button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -873,6 +890,23 @@ const SuperAdminDashboard: React.FC = () => {
                     <div>
                       <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block">Project Naam</label>
                       <input required placeholder="Naam van het project" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none" value={newProject.name || ''} onChange={e=>setNewProject({...newProject, name: e.target.value})} />
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block">Project Logo (Header)</label>
+                      <div className="flex items-center gap-4">
+                        {newProject.logoUrl && (
+                          <div className="w-20 h-20 rounded-xl overflow-hidden border border-slate-100 bg-white p-2 relative group">
+                            <img src={newProject.logoUrl} className="w-full h-full object-contain" />
+                            <button type="button" onClick={() => setNewProject(p => ({...p, logoUrl: ''}))} className="absolute inset-0 bg-red-500/80 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all text-xs">✕</button>
+                          </div>
+                        )}
+                        <button type="button" onClick={() => projectLogoRef.current?.click()} className="px-6 py-3 border-2 border-dashed border-slate-200 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:border-[#8C7864] hover:text-[#8C7864] transition-all">
+                          {newProject.logoUrl ? 'Vervangen' : 'Upload Logo'}
+                        </button>
+                        <input ref={projectLogoRef} type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} />
+                      </div>
+                      <p className="text-[8px] text-slate-400 mt-2 italic">Dit logo wordt getoond in de header voor dit project</p>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4">

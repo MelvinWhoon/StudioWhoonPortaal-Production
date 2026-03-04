@@ -168,7 +168,10 @@ class DataService {
   }
 
   async updateProject(id: string, updates: Partial<Project>) {
-    // Implementation for update via API
+    return this.fetchApi(`/projects/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates)
+    });
   }
 
   async deleteProject(id: string) {

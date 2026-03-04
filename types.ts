@@ -35,7 +35,7 @@ export interface Project {
   id: string;
   name: string;
   status: ProjectStatus;
-  availableOptionIds: string[]; 
+  availableOptionIds: string[];
   additionalPhotos: string[];
   address?: string;
   homesCount?: number;
@@ -44,6 +44,7 @@ export interface Project {
   manager?: string;
   internalRemarks?: string;
   deliveryDate?: string;
+  logoUrl?: string;
 }
 
 export interface ConstructionProgress {

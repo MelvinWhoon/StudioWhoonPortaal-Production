@@ -17,7 +17,8 @@ CREATE TABLE IF NOT EXISTS projects (
     available_option_ids LONGTEXT, -- JSON array
     additional_photos LONGTEXT,    -- JSON array
     internal_remarks TEXT,
-    delivery_date VARCHAR(100)
+    delivery_date VARCHAR(100),
+    logo_url LONGTEXT               -- Project-specific logo
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Users Table

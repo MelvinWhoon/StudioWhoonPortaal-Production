@@ -88,9 +88,49 @@ app.post("/api/projects", async (req, res) => {
       return res.json({ success: true });
     }
     await pool.query(
-      "INSERT INTO projects (id, name, status, address, homes_count, postal_code, city, manager, available_option_ids, additional_photos, internal_remarks, delivery_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-      [p.id, p.name, p.status, p.address, p.homes_count, p.postal_code, p.city, p.manager, JSON.stringify(p.available_option_ids || []), JSON.stringify(p.additional_photos || []), p.internal_remarks, p.delivery_date]
+      "INSERT INTO projects (id, name, status, address, homes_count, postal_code, city, manager, available_option_ids, additional_photos, internal_remarks, delivery_date, logo_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [p.id, p.name, p.status, p.address, p.homes_count, p.postal_code, p.city, p.manager, JSON.stringify(p.available_option_ids || []), JSON.stringify(p.additional_photos || []), p.internal_remarks, p.delivery_date, p.logo_url]
     );
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+});
+
+app.put("/api/projects/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    if (useMockData) {
+      const index = mockStore.projects.findIndex((p: any) => p.id === id);
+      if (index >= 0) {
+        mockStore.projects[index] = { ...mockStore.projects[index], ...updates };
+      }
+      return res.json({ success: true });
+    }
+
+    const fields = [];
+    const values = [];
+
+    if (updates.name !== undefined) { fields.push('name = ?'); values.push(updates.name); }
+    if (updates.status !== undefined) { fields.push('status = ?'); values.push(updates.status); }
+    if (updates.address !== undefined) { fields.push('address = ?'); values.push(updates.address); }
+    if (updates.homes_count !== undefined) { fields.push('homes_count = ?'); values.push(updates.homes_count); }
+    if (updates.postal_code !== undefined) { fields.push('postal_code = ?'); values.push(updates.postal_code); }
+    if (updates.city !== undefined) { fields.push('city = ?'); values.push(updates.city); }
+    if (updates.manager !== undefined) { fields.push('manager = ?'); values.push(updates.manager); }
+    if (updates.delivery_date !== undefined) { fields.push('delivery_date = ?'); values.push(updates.delivery_date); }
+    if (updates.internal_remarks !== undefined) { fields.push('internal_remarks = ?'); values.push(updates.internal_remarks); }
+    if (updates.logo_url !== undefined) { fields.push('logo_url = ?'); values.push(updates.logo_url); }
+    if (updates.available_option_ids !== undefined) { fields.push('available_option_ids = ?'); values.push(JSON.stringify(updates.available_option_ids)); }
+    if (updates.additional_photos !== undefined) { fields.push('additional_photos = ?'); values.push(JSON.stringify(updates.additional_photos)); }
+
+    if (fields.length > 0) {
+      values.push(id);
+      await pool.query(`UPDATE projects SET ${fields.join(', ')} WHERE id = ?`, values);
+    }
+
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: (error as Error).message });

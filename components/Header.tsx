@@ -46,9 +46,20 @@ const Header: React.FC = () => {
           </svg>
         </button>
 
-        <h2 className="text-base md:text-lg font-black text-slate-900 truncate max-w-[150px] md:max-w-none uppercase tracking-tighter">
-          {activeProject?.name || 'Portal'}
-        </h2>
+        {activeProject?.logoUrl ? (
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-white rounded-xl border border-slate-100 p-2 flex items-center justify-center shadow-sm">
+              <img src={activeProject.logoUrl} alt={activeProject.name} className="w-full h-full object-contain" />
+            </div>
+            <h2 className="text-base md:text-lg font-black text-slate-900 truncate max-w-[150px] md:max-w-none uppercase tracking-tighter">
+              {activeProject.name}
+            </h2>
+          </div>
+        ) : (
+          <h2 className="text-base md:text-lg font-black text-slate-900 truncate max-w-[150px] md:max-w-none uppercase tracking-tighter">
+            {activeProject?.name || 'Portal'}
+          </h2>
+        )}
 
         {user?.role === UserRole.SUPER_ADMIN && (
           <div className="hidden xl:flex items-center gap-3 ml-10">
