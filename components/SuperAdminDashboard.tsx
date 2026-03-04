@@ -151,7 +151,10 @@ const SuperAdminDashboard: React.FC = () => {
 
   const filteredUsers = useMemo(() => {
     return users.filter(u => {
-      const matchesSearch = u.name.toLowerCase().includes(userSearch.toLowerCase()) || u.email.toLowerCase().includes(userSearch.toLowerCase());
+      const name = (u.name || '').toLowerCase();
+      const email = (u.email || '').toLowerCase();
+      const search = userSearch.toLowerCase();
+      const matchesSearch = name.includes(search) || email.includes(search);
       const matchesRole = userRoleFilter === 'ALL' || u.role === userRoleFilter;
       return matchesSearch && matchesRole;
     });

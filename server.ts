@@ -4,6 +4,8 @@ import mysql from "mysql2/promise";
 import dotenv from "dotenv";
 import cors from "cors";
 
+// load environment variables from .env.local first (development) then fallback to .env
+dotenv.config({ path: '.env.local' });
 dotenv.config();
 
 const app = express();
@@ -11,6 +13,12 @@ const PORT = 3000;
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
+app.use((req, res, next) => {
+  if (req.path.startsWith("/api") || req.path.startsWith("/debug")) {
+    res.setHeader("Content-Type", "application/json");
+  }
+  next();
+});
 
 // Database connection pool
 let pool: any;
@@ -18,9 +26,9 @@ let useMockData = false;
 
 const dbConfig = {
   host: process.env.DB_HOST || "localhost",
-  user: process.env.DB_USER || "Clientportaladmin",
+  user: process.env.DB_USER || "Whoon",
   password: process.env.DB_PASSWORD || "Meubilex123!",
-  database: process.env.DB_NAME || "ClientportalV2",
+  database: process.env.DB_NAME || "PortalWH",
   port: parseInt(process.env.DB_PORT || "3306"),
   waitForConnections: true,
   connectionLimit: 10,
@@ -45,8 +53,36 @@ async function initDb() {
     connection.release();
   } catch (error) {
     console.error("⚠️ Database connection failed. Falling back to Mock Mode.");
-    console.error("Reason:", (error as Error).message);
+    console.error("Reason:", error);
     useMockData = true;
+  }
+}
+
+// after connecting or determining mock mode we may want to clean stale data
+async function cleanupData() {
+  const melvinEmail = 'melvin@whoon.com';
+  if (!useMockData && pool) {
+    try {
+      // delete everything except the super admin entry
+      const tables = ['projects', 'master_packages', 'messages', 'notifications', 'portal_documents'];
+      for (const table of tables) {
+        await pool.query(`DELETE FROM ${table}`);
+      }
+      // users: remove everyone except Melvin
+      await pool.query(`DELETE FROM users WHERE email != ?`, [melvinEmail]);
+      console.log('🧹 Cleaned database, leaving only superadmin');
+    } catch (e) {
+      console.error('Error during database cleanup:', e);
+    }
+  } else {
+    // mock mode: clear all arrays except Melvin
+    mockStore.projects = [];
+    mockStore.master_packages = [];
+    mockStore.messages = [];
+    mockStore.notifications = [];
+    mockStore.portal_documents = [];
+    mockStore.users = mockStore.users.filter((u: any) => u.email === melvinEmail);
+    console.log('🧹 Cleaned mock store, leaving only superadmin');
   }
 }
 
@@ -65,6 +101,31 @@ const parseJsonFields = (obj: any, fields: string[]) => {
   });
   return newObj;
 };
+
+
+app.get("/debug/db", async (req, res) => {
+  try {
+    if (useMockData) return res.json({ mode: "mock" });
+
+    const [rows]: any = await pool.query(
+  "SELECT @@hostname AS mysql_host, DATABASE() AS db, CURRENT_USER() AS db_user"
+);
+
+const row = rows[0];
+
+res.json({
+  mode: "mysql",
+  mysql_host: row.mysql_host,
+  database: row.db,
+  user: row.db_user
+});
+
+  } catch (e: any) {
+    return res.status(500).json({ mode: "error", error: e.message });
+  }
+});
+
+
 
 // API Routes
 app.get("/api/projects", async (req, res) => {
@@ -136,6 +197,7 @@ app.put("/api/projects/:id", async (req, res) => {
     res.status(500).json({ error: (error as Error).message });
   }
 });
+
 
 app.get("/api/users", async (req, res) => {
   try {
@@ -286,6 +348,8 @@ app.post("/api/documents", async (req, res) => {
 // Vite middleware for development
 async function startServer() {
   await initDb();
+  // await cleanupData(); // uitzetten, anders delete je alles bij elke restart
+
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },

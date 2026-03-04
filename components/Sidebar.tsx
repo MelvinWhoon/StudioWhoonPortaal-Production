@@ -16,7 +16,7 @@ const Icons = {
 };
 
 const Sidebar: React.FC = () => {
-  const { user, logout, activeView, setActiveView, isSidebarOpen, setSidebarOpen } = useAuth();
+  const { user, logout, activeView, setActiveView, isSidebarOpen, setSidebarOpen, activeProject } = useAuth();
   const { t } = useTranslation();
   const [escalatedCount, setEscalatedCount] = useState(0);
 
@@ -66,7 +66,7 @@ const Sidebar: React.FC = () => {
     <div className="flex flex-col h-full bg-[#B7A996] text-slate-900 shadow-2xl overflow-hidden">
       <div className="p-10 flex flex-col items-center gap-6 border-b border-black/5">
         <div className="w-24 h-24 bg-white/40 p-3 rounded-[2.5rem] backdrop-blur-md shadow-inner flex items-center justify-center">
-           <img src={IMAGES.LOGO} alt="Portal Logo" className="w-full h-full object-contain" />
+           <img src={activeProject?.logoUrl || IMAGES.LOGO} alt={activeProject?.name || "Portal Logo"} className="w-full h-full object-contain" />
         </div>
         <div className="text-center">
           <h1 className="text-xs font-black tracking-[0.2em] uppercase">Portal</h1>

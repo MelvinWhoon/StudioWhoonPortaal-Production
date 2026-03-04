@@ -1,8 +1,8 @@
 -- Database Schema for Client Portal
 -- Compatible with MariaDB / MySQL
 
-CREATE DATABASE IF NOT EXISTS client_portal;
-USE client_portal;
+CREATE DATABASE IF NOT EXISTS PortalWH;
+USE PortalWH;
 
 -- Projects Table
 CREATE TABLE IF NOT EXISTS projects (
@@ -98,3 +98,9 @@ CREATE TABLE IF NOT EXISTS portal_documents (
     INDEX (customer_id),
     INDEX (project_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Ensure superadmin account exists
+INSERT INTO users (id, email, name, role, password, is_active, is_password_set, created_at)
+VALUES ('u-melvin', 'melvin@whoon.com', 'Melvin', 'SUPER_ADMIN', 'Meubilex123!', 1, 1, NOW())
+ON DUPLICATE KEY UPDATE
+  email=VALUES(email), name=VALUES(name), role=VALUES(role), password=VALUES(password), is_active=VALUES(is_active);

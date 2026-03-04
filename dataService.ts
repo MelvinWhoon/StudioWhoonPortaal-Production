@@ -288,6 +288,15 @@ class DataService {
   async deleteDocument(id: string): Promise<void> {
     // Implementation for delete via API
   }
+
+  async uploadProjectLogo(projectId: string, base64Data: string): Promise<void> {
+    return this.fetchApi(`/projects/${projectId}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        logo_url: base64Data
+      })
+    });
+  }
 }
 
 export const dataService = new DataService();
