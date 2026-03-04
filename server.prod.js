@@ -1,6 +1,6 @@
-import express from "express";
-import mysql from "mysql2/promise";
-import cors from "cors";
+const express = require("express");
+const mysql = require("mysql2/promise");
+const cors = require("cors");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -34,7 +34,11 @@ app.get("/debug/db", async (req, res) => {
   res.json({ mode: "mysql", ...rows[0] });
 });
 
-// test insert
+app.get("/api/messages", async (req, res) => {
+  const [rows] = await pool.query("SELECT * FROM messages ORDER BY `date` ASC");
+  res.json(rows);
+});
+
 app.post("/api/messages", async (req, res) => {
   const m = req.body;
   await pool.query(
@@ -44,14 +48,9 @@ app.post("/api/messages", async (req, res) => {
   res.json({ success: true });
 });
 
-app.get("/api/messages", async (req, res) => {
-  const [rows] = await pool.query("SELECT * FROM messages ORDER BY `date` ASC");
-  res.json(rows);
-});
-
 initDb()
-  .then(() => app.listen(PORT, "0.0.0.0"))
+  .then(() => app.listen(PORT, "0.0.0.0", () => console.log("API live")))
   .catch((e) => {
-    console.error(e);
+    console.error("BOOT ERROR:", e);
     process.exit(1);
   });
