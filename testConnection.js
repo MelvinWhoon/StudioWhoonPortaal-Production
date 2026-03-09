@@ -1,17 +1,13 @@
-import mysql from 'mysql2/promise';
+import { Pool } from 'pg';
 import fs from 'fs';
 
 (async () => {
   try {
-    const conn = await mysql.createConnection({
-      host: process.env.DB_HOST || 'localhost',
-      user: process.env.DB_USER || 'Whoon',
-      password: process.env.DB_PASSWORD || 'Meubilex123!',
-      database: process.env.DB_NAME || 'PortalWH',
-    });
-    const [rows] = await conn.query('SHOW TABLES');
-    fs.writeFileSync('/tmp/testConnection.txt', JSON.stringify(rows, null, 2));
-    await conn.end();
+    const connectionString = process.env.SUPABASE_DB_URL || process.env.DATABASE_URL || '';
+    const pool = new Pool({ connectionString });
+    const res = await pool.query("SELECT tablename FROM pg_tables WHERE schemaname='public'");
+    fs.writeFileSync('/tmp/testConnection.txt', JSON.stringify(res.rows, null, 2));
+    await pool.end();
   } catch (err) {
     fs.writeFileSync('/tmp/testConnection.txt', 'ERROR:'+err);
   }

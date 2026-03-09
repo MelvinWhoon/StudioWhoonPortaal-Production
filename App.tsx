@@ -9,7 +9,6 @@ import ProjectAdminDashboard from './components/ProjectAdminDashboard';
 import CustomerPortal from './components/CustomerPortal';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
-import { MOCK_USERS } from './constants';
 
 interface AuthContextType {
   user: User | null;

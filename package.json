@@ -8,14 +8,16 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "tsc --noEmit",
-    "start": "node server.ts"
+    "start": "node server.ts",
+    "test:write": "node tests/writeEndpointsTest.js"
   },
   "dependencies": {
     "@google/genai": "^1.40.0",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
-    "mysql2": "^3.18.1",
+    "pg": "^8.11.0",
+    "@supabase/supabase-js": "^2.98.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "tsx": "^4.21.0"

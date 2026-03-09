@@ -54,8 +54,8 @@ class DataService {
     try {
       const users = await this.getUsers();
       
-      // Always upsert MOCK_USERS to ensure critical accounts (like melvin@whoon.com) exist and have correct credentials
-      console.log('Upserting mock users to local API...');
+      // Always upsert the remaining mock user(s) so that Melvin (superadmin) exists
+      console.log('Upserting seed users to API...');
       await this.fetchApi('/users/upsert', {
         method: 'POST',
         body: JSON.stringify(MOCK_USERS)
@@ -237,11 +237,18 @@ class DataService {
   }
 
   async getNotifications(userId: string): Promise<Notification[]> {
-    return []; // Placeholder
+    return this.fetchApi(`/notifications?userId=${userId}`);
   }
 
   async markNotificationsRead(userId: string): Promise<void> {
-    // Placeholder
+    // simplistic approach: fetch all and re-post with read flag (could be optimized)
+    const notifs: Notification[] = await this.getNotifications(userId);
+    for (const n of notifs.filter(n => !n.isRead)) {
+      await this.fetchApi(`/notifications`, {
+        method: 'POST',
+        body: JSON.stringify({ ...n, is_read: true })
+      });
+    }
   }
 
   async getMasterPackages(projectId?: string): Promise<MasterPackage[]> {
