@@ -79,29 +79,9 @@ export const useMessageTranslation = (messages: Message[], targetLang: Language)
 };
 
 const App: React.FC = () => {
-  const [user, setUser] = useState<User | null>(() => {
-    try {
-      const stored = localStorage.getItem('cp_user');
-      return stored ? JSON.parse(stored) : null;
-    } catch {
-      return null;
-    }
-  });
-  const [activeProject, setActiveProject] = useState<Project | null>(() => {
-    try {
-      const stored = localStorage.getItem('cp_activeProject');
-      return stored ? JSON.parse(stored) : null;
-    } catch {
-      return null;
-    }
-  });
-  const [activeView, setActiveView] = useState<string>(() => {
-    try {
-      return localStorage.getItem('cp_activeView') || 'Default';
-    } catch {
-      return 'Default';
-    }
-  });
+  const [user, setUser] = useState<User | null>(null);
+  const [activeProject, setActiveProject] = useState<Project | null>(null);
+  const [activeView, setActiveView] = useState('Default');
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [lang, setLang] = useState<Language>('nl');
   const [isInitializing, setIsInitializing] = useState(true);
@@ -137,23 +117,17 @@ const App: React.FC = () => {
           return;
         }
         setUser(found);
-        localStorage.setItem('cp_user', JSON.stringify(found));
         const projects = await dataService.getProjects();
         if (found.role === UserRole.SUPER_ADMIN) {
           setActiveView('Statistieken');
-          localStorage.setItem('cp_activeView','Statistieken');
         } else if (found.role === UserRole.PROJECT_ADMIN) {
           setActiveView('Dashboard');
-          localStorage.setItem('cp_activeView','Dashboard');
           const p = projects.find(proj => proj.id === found.projectId);
           setActiveProject(p || null);
-          if (p) localStorage.setItem('cp_activeProject', JSON.stringify(p));
         } else {
           setActiveView('Overzicht');
-          localStorage.setItem('cp_activeView','Overzicht');
           const p = projects.find(proj => proj.id === found.projectId);
           setActiveProject(p || null);
-          if (p) localStorage.setItem('cp_activeProject', JSON.stringify(p));
         }
       } else {
         alert('Onbekend emailadres.');
@@ -170,9 +144,6 @@ const App: React.FC = () => {
     setUser(null);
     setActiveProject(null);
     setActiveView('Default');
-    localStorage.removeItem('cp_user');
-    localStorage.removeItem('cp_activeProject');
-    localStorage.removeItem('cp_activeView');
   };
 
   const t = (key: string) => (translations[lang] as any)[key] || key;

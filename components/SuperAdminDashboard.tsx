@@ -106,8 +106,8 @@ const SuperAdminDashboard: React.FC = () => {
   const [editingPackageId, setEditingPackageId] = useState<string | null>(null);
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [newUser, setNewUser] = useState<Partial<User>>({ role: UserRole.PROJECT_ADMIN, isActive: true });
-  const [newProject, setNewProject] = useState<Partial<Project>>({
-    status: ProjectStatus.ACTIVE,
+  const [newProject, setNewProject] = useState<Partial<Project>>({ 
+    status: ProjectStatus.ACTIVE, 
     additionalPhotos: [],
     name: '',
     address: '',
@@ -126,7 +126,6 @@ const SuperAdminDashboard: React.FC = () => {
 
   const projectPhotosRef = useRef<HTMLInputElement>(null);
   const packagePhotosRef = useRef<HTMLInputElement>(null);
-  const projectLogoRef = useRef<HTMLInputElement>(null);
 
   const refreshData = async () => {
     setIsLoading(true);
@@ -151,10 +150,7 @@ const SuperAdminDashboard: React.FC = () => {
 
   const filteredUsers = useMemo(() => {
     return users.filter(u => {
-      const name = (u.name || '').toLowerCase();
-      const email = (u.email || '').toLowerCase();
-      const search = userSearch.toLowerCase();
-      const matchesSearch = name.includes(search) || email.includes(search);
+      const matchesSearch = u.name.toLowerCase().includes(userSearch.toLowerCase()) || u.email.toLowerCase().includes(userSearch.toLowerCase());
       const matchesRole = userRoleFilter === 'ALL' || u.role === userRoleFilter;
       return matchesSearch && matchesRole;
     });
@@ -311,8 +307,8 @@ const SuperAdminDashboard: React.FC = () => {
       }
       setIsProjectModalOpen(false);
       setEditingProjectId(null);
-      setNewProject({
-        status: ProjectStatus.ACTIVE,
+      setNewProject({ 
+        status: ProjectStatus.ACTIVE, 
         additionalPhotos: [],
         name: '',
         address: '',
@@ -321,8 +317,7 @@ const SuperAdminDashboard: React.FC = () => {
         manager: '',
         homesCount: 0,
         deliveryDate: '',
-        internalRemarks: '',
-        logoUrl: ''
+        internalRemarks: ''
       });
       await refreshData();
       setFeedback({ title: "Project Opgeslagen", type: 'success' });
@@ -349,15 +344,16 @@ const SuperAdminDashboard: React.FC = () => {
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      setNewProject(prev => ({
-        ...prev,
-        logoUrl: reader.result as string
-      }));
-    };
-    reader.readAsDataURL(file);
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setNewProject(prev => ({
+          ...prev,
+          logoUrl: reader.result as string
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handlePackagePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -540,10 +536,10 @@ const SuperAdminDashboard: React.FC = () => {
           <div className="space-y-8 animate-in fade-in duration-300">
             <div className="flex justify-between items-center">
               <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Projectenoverzicht</h1>
-              <button onClick={() => {
-                setEditingProjectId(null);
-                setNewProject({
-                  status: ProjectStatus.ACTIVE,
+              <button onClick={() => { 
+                setEditingProjectId(null); 
+                setNewProject({ 
+                  status: ProjectStatus.ACTIVE, 
                   additionalPhotos: [],
                   name: '',
                   address: '',
@@ -552,10 +548,9 @@ const SuperAdminDashboard: React.FC = () => {
                   manager: '',
                   homesCount: 0,
                   deliveryDate: '',
-                  internalRemarks: '',
-                  logoUrl: ''
-                });
-                setIsProjectModalOpen(true);
+                  internalRemarks: ''
+                }); 
+                setIsProjectModalOpen(true); 
               }} className="px-6 py-3 bg-[#8C7864] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-[#8C7864]/20 active:scale-95 transition-all">Nieuw Project</button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -894,23 +889,6 @@ const SuperAdminDashboard: React.FC = () => {
                       <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block">Project Naam</label>
                       <input required placeholder="Naam van het project" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none" value={newProject.name || ''} onChange={e=>setNewProject({...newProject, name: e.target.value})} />
                     </div>
-
-                    <div>
-                      <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block">Project Logo (Header)</label>
-                      <div className="flex items-center gap-4">
-                        {newProject.logoUrl && (
-                          <div className="w-20 h-20 rounded-xl overflow-hidden border border-slate-100 bg-white p-2 relative group">
-                            <img src={newProject.logoUrl} className="w-full h-full object-contain" />
-                            <button type="button" onClick={() => setNewProject(p => ({...p, logoUrl: ''}))} className="absolute inset-0 bg-red-500/80 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all text-xs">✕</button>
-                          </div>
-                        )}
-                        <button type="button" onClick={() => projectLogoRef.current?.click()} className="px-6 py-3 border-2 border-dashed border-slate-200 rounded-xl text-[10px] font-black uppercase text-slate-400 hover:border-[#8C7864] hover:text-[#8C7864] transition-all">
-                          {newProject.logoUrl ? 'Vervangen' : 'Upload Logo'}
-                        </button>
-                        <input ref={projectLogoRef} type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} />
-                      </div>
-                      <p className="text-[8px] text-slate-400 mt-2 italic">Dit logo wordt getoond in de header voor dit project</p>
-                    </div>
                     
                     <div className="grid grid-cols-2 gap-4">
                       <div>
@@ -943,6 +921,29 @@ const SuperAdminDashboard: React.FC = () => {
                        <div className="grid grid-cols-2 gap-4">
                           <input placeholder="Postcode" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none" value={newProject.postalCode || ''} onChange={e=>setNewProject({...newProject, postalCode: e.target.value})} />
                           <input placeholder="Plaats" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none" value={newProject.city || ''} onChange={e=>setNewProject({...newProject, city: e.target.value})} />
+                       </div>
+                    </div>
+
+                    <div>
+                       <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block">Project Logo</label>
+                       <div className="flex items-center gap-4 mb-4">
+                          {newProject.logoUrl ? (
+                             <div className="w-20 h-20 rounded-2xl overflow-hidden border border-slate-100 relative group bg-slate-50 flex items-center justify-center p-2">
+                                <img src={newProject.logoUrl} className="max-w-full max-h-full object-contain" />
+                                <button type="button" onClick={() => setNewProject(p => ({...p, logoUrl: ''}))} className="absolute inset-0 bg-red-500/80 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">✕</button>
+                             </div>
+                          ) : (
+                             <button type="button" onClick={() => {
+                                const input = document.createElement('input');
+                                input.type = 'file';
+                                input.accept = 'image/*';
+                                input.onchange = (e: any) => handleLogoUpload(e);
+                                input.click();
+                             }} className="w-20 h-20 rounded-2xl border-2 border-dashed border-slate-200 flex items-center justify-center text-slate-300 hover:border-[#8C7864] hover:text-[#8C7864] transition-all text-2xl">+</button>
+                          )}
+                          <div className="text-[9px] font-black text-slate-300 uppercase leading-tight">
+                             Upload een logo voor<br/>dit specifieke project
+                          </div>
                        </div>
                     </div>
 

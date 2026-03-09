@@ -134,22 +134,15 @@ const ProjectAdminDashboard: React.FC = () => {
     if (!editingCustomer || !activeProject) return;
     setIsLoading(true);
     try {
-      // Combine firstName and lastName into name
-      const fullName = `${editingCustomer.firstName || ''} ${editingCustomer.lastName || ''}`.trim();
-      const customerData = {
-        ...editingCustomer,
-        name: fullName || editingCustomer.name
-      };
-      
       if (editingCustomer.id) {
-        await dataService.updateUser(editingCustomer.id, customerData);
+        await dataService.updateUser(editingCustomer.id, editingCustomer);
         setIsEditModalOpen(false);
         setEditingCustomer(null);
         setFeedback({ title: "Bijgewerkt", type: 'success' });
       } else {
         const pass = generateRandomPassword();
         await dataService.createUser({
-          ...customerData,
+          ...editingCustomer,
           role: UserRole.CUSTOMER,
           projectId: activeProject.id,
           isActive: true,
@@ -606,18 +599,15 @@ const ProjectAdminDashboard: React.FC = () => {
                     <div className="space-y-6">
                         <div>
                           <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Persoonlijke Gegevens</label>
-                          <input required placeholder="Voornaam" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none mb-3" value={editingCustomer?.firstName || ''} onChange={e=>setEditingCustomer({...editingCustomer, firstName: e.target.value})} />
-                          <input required placeholder="Achternaam" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none mb-3" value={editingCustomer?.lastName || ''} onChange={e=>setEditingCustomer({...editingCustomer, lastName: e.target.value})} />
-                          <input required type="email" placeholder="E-mailadres" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none mb-3" value={editingCustomer?.email || ''} onChange={e=>setEditingCustomer({...editingCustomer, email: e.target.value})} />
-                          <input placeholder="Telefoonnummer" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none" value={editingCustomer?.phone || ''} onChange={e=>setEditingCustomer({...editingCustomer, phone: e.target.value})} />
+                          <input required placeholder="Volledige naam" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none mb-3" value={editingCustomer?.name || ''} onChange={e=>setEditingCustomer({...editingCustomer, name: e.target.value})} />
+                          <input required type="email" placeholder="E-mailadres" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none" value={editingCustomer?.email || ''} onChange={e=>setEditingCustomer({...editingCustomer, email: e.target.value})} />
                         </div>
                     </div>
                     <div className="space-y-6">
                         <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Appartement Info</label>
-                        <input required placeholder="Appartementnummer" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none mb-3" value={editingCustomer?.apartmentId || ''} onChange={e=>setEditingCustomer({...editingCustomer, apartmentId: e.target.value})} />
-                        <input placeholder="Dossiernummer (optioneel)" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none mb-3" value={editingCustomer?.dossierNumber || ''} onChange={e=>setEditingCustomer({...editingCustomer, dossierNumber: e.target.value})} />
+                        <input placeholder="Appartement ID (Bijv. APT-101)" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none mb-3" value={editingCustomer?.apartmentId || ''} onChange={e=>setEditingCustomer({...editingCustomer, apartmentId: e.target.value})} />
                         <select className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold" value={editingCustomer?.masterPackageId || ''} onChange={e=>setEditingCustomer({...editingCustomer, masterPackageId: e.target.value})}>
-                            <option value="">Selecteer Pakket</option>
+                            <option value="">Geen Pakket</option>
                             {packages.map(p => <option key={p.id} value={p.id}>{p.name.toUpperCase()}</option>)}
                         </select>
                     </div>

@@ -46,20 +46,12 @@ const Header: React.FC = () => {
           </svg>
         </button>
 
-        {activeProject?.logoUrl ? (
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-white rounded-xl border border-slate-100 p-2 flex items-center justify-center shadow-sm">
-              <img src={activeProject.logoUrl} alt={activeProject.name} className="w-full h-full object-contain" />
-            </div>
-            <h2 className="text-base md:text-lg font-black text-slate-900 truncate max-w-[150px] md:max-w-none uppercase tracking-tighter">
-              {activeProject.name}
-            </h2>
-          </div>
-        ) : (
-          <h2 className="text-base md:text-lg font-black text-slate-900 truncate max-w-[150px] md:max-w-none uppercase tracking-tighter">
-            {activeProject?.name || 'Portal'}
-          </h2>
-        )}
+        <h2 className="text-base md:text-lg font-black text-slate-900 truncate max-w-[150px] md:max-w-none uppercase tracking-tighter flex items-center gap-3">
+          {activeProject?.logoUrl && (
+            <img src={activeProject.logoUrl} alt="Logo" className="h-8 w-auto object-contain" referrerPolicy="no-referrer" />
+          )}
+          {activeProject?.name || 'Portal'}
+        </h2>
 
         {user?.role === UserRole.SUPER_ADMIN && (
           <div className="hidden xl:flex items-center gap-3 ml-10">
@@ -97,7 +89,10 @@ const Header: React.FC = () => {
            ))}
         </div>
 
-
+        <div className="flex items-center gap-3 px-5 py-2.5 rounded-2xl bg-slate-50 text-slate-400 text-[9px] font-black uppercase tracking-widest border border-slate-100">
+          <span className="w-2 h-2 rounded-full bg-[#8C7864] animate-pulse" />
+          <span className="hidden sm:inline">Portal System v2</span>
+        </div>
       </div>
     </header>
   );

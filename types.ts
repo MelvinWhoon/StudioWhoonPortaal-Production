@@ -35,7 +35,7 @@ export interface Project {
   id: string;
   name: string;
   status: ProjectStatus;
-  availableOptionIds: string[];
+  availableOptionIds: string[]; 
   additionalPhotos: string[];
   address?: string;
   homesCount?: number;
@@ -66,8 +66,6 @@ export interface User {
   id: string;
   email: string;
   name: string;
-  firstName?: string;
-  lastName?: string;
   role: UserRole;
   password?: string;
   isPasswordSet: boolean;

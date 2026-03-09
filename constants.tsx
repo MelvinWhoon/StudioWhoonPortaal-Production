@@ -18,26 +18,6 @@ export const IMAGES = {
   ]
 };
 
-// no mock projects; will be created in Supabase if needed
-export const MOCK_PROJECTS: any[] = [];
-
-// no mock packages
-export const MOCK_PACKAGES: any[] = [];
-
-const now = new Date();
-const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, 15).toISOString();
-const currentMonth = now.toISOString();
-
-// only the super-admin account remains in mocks
-export const MOCK_USERS = [
-  { 
-    id: 'u-melvin', 
-    email: 'melvin@whoon.com', 
-    name: 'Melvin', 
-    role: UserRole.SUPER_ADMIN, 
-    isActive: true,
-    isPasswordSet: true,
-    password: 'Meubilex123!',
-    createdAt: currentMonth
-  }
-];
+export const MOCK_PROJECTS = [];
+export const MOCK_PACKAGES = [];
+export const MOCK_USERS = [];
