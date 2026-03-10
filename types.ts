@@ -45,6 +45,8 @@ export interface Project {
   internalRemarks?: string;
   deliveryDate?: string;
   logoUrl?: string;
+  backgroundColor?: string;
+  sidebarColor?: string;
 }
 
 export interface ConstructionProgress {

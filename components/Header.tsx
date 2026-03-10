@@ -91,7 +91,7 @@ const Header: React.FC = () => {
 
         <div className="flex items-center gap-3 px-5 py-2.5 rounded-2xl bg-slate-50 text-slate-400 text-[9px] font-black uppercase tracking-widest border border-slate-100">
           <span className="w-2 h-2 rounded-full bg-[#8C7864] animate-pulse" />
-          <span className="hidden sm:inline">Portal System v2</span>
+          <span className="hidden sm:inline">v1.8</span>
         </div>
       </div>
     </header>

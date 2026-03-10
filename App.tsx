@@ -117,9 +117,16 @@ const App: React.FC = () => {
           return;
         }
         setUser(found);
+        
+        // Log the login
+        dataService.logUserLogin(found.id, 'unknown', navigator.userAgent).catch(console.error);
+
         const projects = await dataService.getProjects();
         if (found.role === UserRole.SUPER_ADMIN) {
           setActiveView('Statistieken');
+          if (projects.length > 0) {
+            setActiveProject(projects[0]);
+          }
         } else if (found.role === UserRole.PROJECT_ADMIN) {
           setActiveView('Dashboard');
           const p = projects.find(proj => proj.id === found.projectId);
@@ -165,7 +172,7 @@ const App: React.FC = () => {
         {!user ? (
           <Login onLogin={login} isLoggingIn={isLoggingIn} />
         ) : (
-          <div className="flex h-screen bg-[#edeae6] font-inter overflow-hidden relative">
+          <div className="flex h-screen font-inter overflow-hidden relative" style={{ backgroundColor: activeProject?.backgroundColor || '#edeae6' }}>
             <div 
               className="absolute inset-0 z-0 bg-cover bg-center opacity-20 pointer-events-none"
               style={{ backgroundImage: `url(https://www.whoon.com/wp-content/uploads/2026/02/2e51ae92f59d5cb308c03b8dd6b83d91.jpg)` }}

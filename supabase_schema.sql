@@ -16,11 +16,15 @@ CREATE TABLE IF NOT EXISTS projects (
     additional_photos JSONB DEFAULT '[]'::jsonb,
     internal_remarks TEXT,
     delivery_date TEXT,
-    logo_url TEXT
+    logo_url TEXT,
+    background_color TEXT,
+    sidebar_color TEXT
 );
 
 -- Ensure logo_url exists if table was created earlier
 ALTER TABLE projects ADD COLUMN IF NOT EXISTS logo_url TEXT;
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS background_color TEXT;
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS sidebar_color TEXT;
 
 -- 2. MASTER PACKAGES TABLE
 CREATE TABLE IF NOT EXISTS master_packages (
@@ -100,6 +104,15 @@ CREATE TABLE IF NOT EXISTS notifications (
     text TEXT NOT NULL,
     date TIMESTAMPTZ DEFAULT NOW(),
     is_read BOOLEAN DEFAULT false
+);
+
+-- 6.5 USER LOGINS TABLE
+CREATE TABLE IF NOT EXISTS user_logins (
+    id TEXT PRIMARY KEY,
+    user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
+    login_time TIMESTAMPTZ DEFAULT NOW(),
+    ip_address TEXT,
+    user_agent TEXT
 );
 
 -- 7. AUTOMATIC NOTIFICATION TRIGGERS (For Speed)

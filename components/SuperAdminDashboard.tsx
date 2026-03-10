@@ -117,7 +117,9 @@ const SuperAdminDashboard: React.FC = () => {
     homesCount: 0,
     deliveryDate: '',
     internalRemarks: '',
-    logoUrl: ''
+    logoUrl: '',
+    backgroundColor: '',
+    sidebarColor: ''
   });
   const [newPackage, setNewPackage] = useState<Partial<MasterPackage>>({ inclusions: [], projectId: '', category: 'Standaard', photos: [] });
   const [newCategoryInput, setNewCategoryInput] = useState('');
@@ -957,6 +959,26 @@ const SuperAdminDashboard: React.FC = () => {
                           )}
                           <div className="text-[9px] font-black text-slate-300 uppercase leading-tight">
                              Upload een logo voor<br/>dit specifieke project
+                          </div>
+                       </div>
+                    </div>
+
+                    <div>
+                       <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block">Project Kleuren</label>
+                       <div className="grid grid-cols-2 gap-4">
+                          <div>
+                             <label className="text-[9px] font-black uppercase text-slate-400 mb-1 block">Achtergrondkleur</label>
+                             <div className="flex items-center gap-2">
+                                <input type="color" className="w-8 h-8 rounded cursor-pointer border-0 p-0" value={newProject.backgroundColor || '#ffffff'} onChange={e=>setNewProject({...newProject, backgroundColor: e.target.value})} />
+                                <input type="text" placeholder="#ffffff" className="w-full p-2 bg-slate-50 border border-slate-100 rounded-lg outline-none text-xs" value={newProject.backgroundColor || ''} onChange={e=>setNewProject({...newProject, backgroundColor: e.target.value})} />
+                             </div>
+                          </div>
+                          <div>
+                             <label className="text-[9px] font-black uppercase text-slate-400 mb-1 block">Zijbalkkleur</label>
+                             <div className="flex items-center gap-2">
+                                <input type="color" className="w-8 h-8 rounded cursor-pointer border-0 p-0" value={newProject.sidebarColor || '#ffffff'} onChange={e=>setNewProject({...newProject, sidebarColor: e.target.value})} />
+                                <input type="text" placeholder="#ffffff" className="w-full p-2 bg-slate-50 border border-slate-100 rounded-lg outline-none text-xs" value={newProject.sidebarColor || ''} onChange={e=>setNewProject({...newProject, sidebarColor: e.target.value})} />
+                             </div>
                           </div>
                        </div>
                     </div>

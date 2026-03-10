@@ -469,7 +469,7 @@ const ProjectAdminDashboard: React.FC = () => {
                      </div>
                    </div>
                    <div className="space-y-8">
-                      <div className="bg-[#B7A996] p-8 rounded-3xl text-slate-900 shadow-xl shadow-[#B7A996]/10">
+                      <div className="p-8 rounded-3xl text-slate-900 shadow-xl" style={{ backgroundColor: activeProject?.sidebarColor || '#B7A996', boxShadow: `0 20px 25px -5px ${activeProject?.sidebarColor || '#B7A996'}1a, 0 8px 10px -6px ${activeProject?.sidebarColor || '#B7A996'}1a` }}>
                         <h4 className="text-[10px] font-black uppercase text-slate-700 mb-6 tracking-widest">Appartement Kenmerken</h4>
                         <div className="space-y-4">
                            <div className="flex justify-between border-b border-black/5 pb-2">

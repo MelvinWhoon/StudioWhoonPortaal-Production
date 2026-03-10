@@ -54,7 +54,9 @@ class DataService {
       postalCode: p.postal_code,
       internalRemarks: p.internal_remarks,
       deliveryDate: p.delivery_date,
-      logoUrl: p.logo_url
+      logoUrl: p.logo_url,
+      backgroundColor: p.background_color,
+      sidebarColor: p.sidebar_color
     }));
   }
 
@@ -150,7 +152,9 @@ class DataService {
         additional_photos: JSON.stringify(data.additionalPhotos || []),
         internal_remarks: data.internalRemarks,
         delivery_date: data.deliveryDate,
-        logo_url: data.logoUrl
+        logo_url: data.logoUrl,
+        background_color: data.backgroundColor,
+        sidebar_color: data.sidebarColor
       }]);
     
     if (error) throw error;
@@ -172,7 +176,9 @@ class DataService {
         additional_photos: updates.additionalPhotos ? JSON.stringify(updates.additionalPhotos) : undefined,
         internal_remarks: updates.internalRemarks,
         delivery_date: updates.deliveryDate,
-        logo_url: updates.logoUrl
+        logo_url: updates.logoUrl,
+        background_color: updates.backgroundColor,
+        sidebar_color: updates.sidebarColor
       })
       .eq('id', id);
     
@@ -188,6 +194,22 @@ class DataService {
     
     if (error) throw error;
     return { success: true };
+  }
+
+  async logUserLogin(userId: string, ipAddress?: string, userAgent?: string) {
+    const { error } = await supabase
+      .from('user_logins')
+      .insert([{
+        id: `ul${Math.random().toString(36).substr(2, 9)}`,
+        user_id: userId,
+        ip_address: ipAddress,
+        user_agent: userAgent,
+        login_time: new Date().toISOString()
+      }]);
+    
+    if (error) {
+      console.error('Error logging user login:', error);
+    }
   }
 
   async getUsers(): Promise<User[]> {

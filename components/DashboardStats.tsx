@@ -6,6 +6,7 @@ import { useAuth } from '../App';
 const DashboardStats: React.FC<{ projectId?: string }> = ({ projectId }) => {
   const [stats, setStats] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const { activeProject } = useAuth();
 
   useEffect(() => {
     const load = async () => {
@@ -86,7 +87,7 @@ const DashboardStats: React.FC<{ projectId?: string }> = ({ projectId }) => {
           </div>
         </div>
 
-        <div className="bg-[#B7A996] rounded-[2.5rem] p-10 text-slate-900 shadow-xl shadow-[#B7A996]/20 flex flex-col">
+        <div className="rounded-[2.5rem] p-10 text-slate-900 shadow-xl flex flex-col" style={{ backgroundColor: activeProject?.sidebarColor || '#B7A996', boxShadow: `0 20px 25px -5px ${activeProject?.sidebarColor || '#B7A996'}33, 0 8px 10px -6px ${activeProject?.sidebarColor || '#B7A996'}33` }}>
            <h3 className="text-sm font-black uppercase tracking-widest mb-8 border-b border-black/5 pb-4">Klanten per Project</h3>
            <div className="space-y-6 flex-1 overflow-y-auto custom-scrollbar pr-2">
               {Object.entries(stats.customersPerProject).map(([name, count]) => (
