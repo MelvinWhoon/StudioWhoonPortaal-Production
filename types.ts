@@ -66,11 +66,15 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  firstName?: string;
+  lastName?: string;
   role: UserRole;
   password?: string;
   isPasswordSet: boolean;
   projectId?: string;
   apartmentId?: string;
+  caseNumber?: string;
+  plotNumber?: string;
   isActive: boolean;
   phone?: string;
   address?: string;

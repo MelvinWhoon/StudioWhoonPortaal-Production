@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth, useTranslation } from '../App';
 import { dataService } from '../dataService';
 import { User, UserRole, MasterPackage, Message, Project, ProjectStatus, PortalDocument } from '../types';
+import { downloadFile } from '../downloadUtils';
 import DashboardStats from './DashboardStats';
 
 const generateRandomPassword = () => {
@@ -73,6 +74,7 @@ const ProjectAdminDashboard: React.FC = () => {
   const [dossierTab, setDossierTab] = useState<'profile' | 'docs' | 'chat'>('profile');
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
+  const [isSending, setIsSending] = useState(false);
   const [customerDocs, setCustomerDocs] = useState<PortalDocument[]>([]);
   const [packages, setPackages] = useState<MasterPackage[]>([]);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -123,10 +125,19 @@ const ProjectAdminDashboard: React.FC = () => {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !selectedCustomerId || !activeProject) return;
-    await dataService.sendMessage(activeProject.id, selectedCustomerId, currentUser!.id, currentUser!.name, currentUser!.role, newMessage);
-    setNewMessage('');
-    await refreshData();
+    if (!newMessage.trim() || !selectedCustomerId || !activeProject || isSending) return;
+    
+    setIsSending(true);
+    try {
+      await dataService.sendMessage(activeProject.id, selectedCustomerId, currentUser!.id, currentUser!.name, currentUser!.role, newMessage);
+      setNewMessage('');
+      await refreshData();
+    } catch (err) {
+      console.error("Error sending message:", err);
+      setFeedback({ title: "Fout", msg: "Er is een fout opgetreden bij het verzenden van het bericht.", type: 'error' });
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const handleSaveCustomer = async (e: React.FormEvent) => {
@@ -529,7 +540,7 @@ const ProjectAdminDashboard: React.FC = () => {
                                   <td className="p-6 text-[10px] font-bold text-slate-500">{doc.date}</td>
                                   <td className="p-6 text-right">
                                      <div className="flex justify-end gap-2">
-                                        <button onClick={() => window.open(doc.externalUrl)} className="w-8 h-8 bg-slate-900 text-white rounded-lg flex items-center justify-center hover:bg-[#8C7864] transition-all">📥</button>
+                                        <button onClick={() => downloadFile(doc.externalUrl || '', doc.fileName)} className="w-8 h-8 bg-slate-900 text-white rounded-lg flex items-center justify-center hover:bg-[#8C7864] transition-all">📥</button>
                                         <button onClick={() => dataService.deleteDocument(doc.id).then(refreshData)} className="w-8 h-8 bg-red-50 text-red-500 rounded-lg flex items-center justify-center hover:bg-red-500 hover:text-white transition-all">🗑️</button>
                                      </div>
                                   </td>
@@ -562,8 +573,24 @@ const ProjectAdminDashboard: React.FC = () => {
                      <div ref={chatEndRef} />
                    </div>
                    <form onSubmit={handleSendMessage} className="p-6 bg-white border-t border-slate-100 flex gap-4">
-                      <input className="flex-1 p-4 bg-slate-50 border border-slate-100 rounded-xl outline-none text-sm" placeholder="Typ uw antwoord..." value={newMessage} onChange={e=>setNewMessage(e.target.value)} />
-                      <button type="submit" className="px-8 bg-slate-900 text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-slate-900/10 hover:bg-[#8C7864] transition-all active:scale-95">Verstuur</button>
+                      <input 
+                        className="flex-1 p-4 bg-slate-50 border border-slate-100 rounded-xl outline-none text-sm" 
+                        placeholder="Typ uw antwoord..." 
+                        value={newMessage} 
+                        onChange={e=>setNewMessage(e.target.value)} 
+                        disabled={isSending}
+                      />
+                      <button 
+                        type="submit" 
+                        disabled={isSending || !newMessage.trim()}
+                        className={`px-8 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all active:scale-95 ${
+                          isSending || !newMessage.trim()
+                            ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                            : 'bg-slate-900 text-white shadow-xl shadow-slate-900/10 hover:bg-[#8C7864]'
+                        }`}
+                      >
+                        {isSending ? '...' : 'Verstuur'}
+                      </button>
                    </form>
                  </div>
                )}
@@ -599,12 +626,20 @@ const ProjectAdminDashboard: React.FC = () => {
                     <div className="space-y-6">
                         <div>
                           <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Persoonlijke Gegevens</label>
-                          <input required placeholder="Volledige naam" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none mb-3" value={editingCustomer?.name || ''} onChange={e=>setEditingCustomer({...editingCustomer, name: e.target.value})} />
-                          <input required type="email" placeholder="E-mailadres" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none" value={editingCustomer?.email || ''} onChange={e=>setEditingCustomer({...editingCustomer, email: e.target.value})} />
+                          <div className="grid grid-cols-2 gap-4 mb-3">
+                            <input required placeholder="Voornaam" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none" value={editingCustomer?.firstName || ''} onChange={e=>setEditingCustomer({...editingCustomer, firstName: e.target.value})} />
+                            <input required placeholder="Achternaam" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none" value={editingCustomer?.lastName || ''} onChange={e=>setEditingCustomer({...editingCustomer, lastName: e.target.value})} />
+                          </div>
+                          <input required type="email" placeholder="E-mailadres" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none mb-3" value={editingCustomer?.email || ''} onChange={e=>setEditingCustomer({...editingCustomer, email: e.target.value})} />
+                          <input placeholder="Telefoonnummer" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none" value={editingCustomer?.phone || ''} onChange={e=>setEditingCustomer({...editingCustomer, phone: e.target.value})} />
                         </div>
                     </div>
                     <div className="space-y-6">
                         <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Appartement Info</label>
+                        <div className="grid grid-cols-2 gap-4 mb-3">
+                          <input placeholder="Dossiernummer" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none" value={editingCustomer?.caseNumber || ''} onChange={e=>setEditingCustomer({...editingCustomer, caseNumber: e.target.value})} />
+                          <input placeholder="Kavelnummer" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none" value={editingCustomer?.plotNumber || ''} onChange={e=>setEditingCustomer({...editingCustomer, plotNumber: e.target.value})} />
+                        </div>
                         <input placeholder="Appartement ID (Bijv. APT-101)" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none mb-3" value={editingCustomer?.apartmentId || ''} onChange={e=>setEditingCustomer({...editingCustomer, apartmentId: e.target.value})} />
                         <select className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold" value={editingCustomer?.masterPackageId || ''} onChange={e=>setEditingCustomer({...editingCustomer, masterPackageId: e.target.value})}>
                             <option value="">Geen Pakket</option>

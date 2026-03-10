@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth, useTranslation, useMessageTranslation } from '../App';
 import { dataService } from '../dataService';
 import { PortalDocument, Message, Notification, UserRole, MasterPackage, MessageCategory } from '../types';
+import { downloadFile } from '../downloadUtils';
 
 const InteractiveGallery: React.FC<{ photos: string[] }> = ({ photos }) => {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -37,6 +38,7 @@ const CustomerPortal: React.FC = () => {
   const [packages, setPackages] = useState<MasterPackage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const [uploadFileName, setUploadFileName] = useState('');
   const msgEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -61,10 +63,21 @@ const CustomerPortal: React.FC = () => {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !user || !activeProject) return;
-    await dataService.sendMessage(activeProject.id, user.id, user.id, user.name, user.role, newMessage);
-    setMessages(await dataService.getMessages(user.id));
-    setNewMessage('');
+    const targetProjectId = activeProject?.id || user?.projectId;
+    if (!newMessage.trim() || !user || !targetProjectId || isSending) return;
+    
+    setIsSending(true);
+    try {
+      await dataService.sendMessage(targetProjectId, user.id, user.id, user.name, user.role, newMessage);
+      const updatedMessages = await dataService.getMessages(user.id);
+      setMessages(updatedMessages);
+      setNewMessage('');
+    } catch (err) {
+      console.error("Error sending message:", err);
+      alert("Er is een fout opgetreden bij het verzenden van uw bericht.");
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -125,8 +138,24 @@ const CustomerPortal: React.FC = () => {
             <div ref={msgEndRef} />
           </div>
           <form onSubmit={handleSendMessage} className="p-8 border-t border-slate-50 bg-white flex gap-4">
-            <input className="flex-1 p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none" placeholder={t('type_message')} value={newMessage} onChange={e=>setNewMessage(e.target.value)} />
-            <button type="submit" className="px-10 bg-[#8C7864] text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-[#8C7864]/20 active:scale-95 transition-all">Verzend</button>
+            <input 
+              className="flex-1 p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none" 
+              placeholder={t('type_message')} 
+              value={newMessage} 
+              onChange={e=>setNewMessage(e.target.value)}
+              disabled={isSending}
+            />
+            <button 
+              type="submit" 
+              disabled={isSending || !newMessage.trim()}
+              className={`px-10 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl transition-all active:scale-95 ${
+                isSending || !newMessage.trim() 
+                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' 
+                  : 'bg-[#8C7864] text-white shadow-[#8C7864]/20'
+              }`}
+            >
+              {isSending ? '...' : 'Verzend'}
+            </button>
           </form>
         </div>
         <div className="w-full lg:w-80 bg-white rounded-[2.5rem] border border-slate-100 p-8">
@@ -191,7 +220,7 @@ const CustomerPortal: React.FC = () => {
                   <td className="p-8 text-xs text-slate-500 font-bold">{doc.size}</td>
                   <td className="p-8 text-right">
                     <div className="flex justify-end gap-2">
-                       <button onClick={() => window.open(doc.externalUrl)} className="w-10 h-10 bg-slate-900 text-white rounded-xl shadow-lg hover:bg-[#8C7864] transition-all flex items-center justify-center">📥</button>
+                       <button onClick={() => downloadFile(doc.externalUrl || '', doc.fileName)} className="w-10 h-10 bg-slate-900 text-white rounded-xl shadow-lg hover:bg-[#8C7864] transition-all flex items-center justify-center">📥</button>
                        {doc.uploadedBy === user?.name && (
                          <button onClick={() => dataService.deleteDocument(doc.id).then(refreshDocs)} className="w-10 h-10 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all flex items-center justify-center">🗑️</button>
                        )}

@@ -59,9 +59,11 @@ class DataService {
   }
 
   async getDashboardStats(projectId?: string): Promise<DashboardData> {
-    const projects = await this.getProjects();
-    const allUsers = await this.getUsers();
-    const allMessages = await this.getAllMessages();
+    const [projects, allUsers, allMessages] = await Promise.all([
+      this.getProjects(),
+      this.getUsers(),
+      this.getAllMessages()
+    ]);
 
     const filteredProjects = projectId ? projects.filter(p => p.id === projectId) : projects;
     const filteredUsers = projectId ? allUsers.filter(u => u.projectId === projectId) : allUsers;
@@ -196,6 +198,10 @@ class DataService {
     if (error) throw error;
     return (data || []).map(u => ({
       ...u,
+      firstName: u.first_name,
+      lastName: u.last_name,
+      caseNumber: u.case_number,
+      plotNumber: u.plot_number,
       isPasswordSet: u.is_password_set,
       projectId: u.project_id,
       apartmentId: u.apartment_id,
@@ -215,7 +221,12 @@ class DataService {
       .insert([{
         id,
         email: userData.email,
-        name: userData.name,
+        name: userData.name || `${userData.firstName} ${userData.lastName}`,
+        first_name: userData.firstName,
+        last_name: userData.lastName,
+        phone: userData.phone,
+        case_number: userData.caseNumber,
+        plot_number: userData.plotNumber,
         role: userData.role,
         password: userData.password,
         is_active: userData.isActive,
@@ -239,7 +250,12 @@ class DataService {
       .from('users')
       .update({
         email: updates.email,
-        name: updates.name,
+        name: updates.name || (updates.firstName && updates.lastName ? `${updates.firstName} ${updates.lastName}` : updates.name),
+        first_name: updates.firstName,
+        last_name: updates.lastName,
+        phone: updates.phone,
+        case_number: updates.caseNumber,
+        plot_number: updates.plotNumber,
         role: updates.role,
         password: updates.password,
         is_active: updates.isActive,
@@ -323,6 +339,21 @@ class DataService {
       }]);
     
     if (error) throw error;
+
+    // Notifications are now handled by database triggers for maximum speed
+  }
+
+  async createNotification(userId: string, text: string): Promise<void> {
+    const { error } = await supabase
+      .from('notifications')
+      .insert([{
+        id: `n${Math.random().toString(36).substr(2, 9)}`,
+        user_id: userId,
+        text,
+        date: new Date().toISOString(),
+        is_read: false
+      }]);
+    if (error) throw error;
   }
 
   async escalateChat(customerId: string, isEscalated: boolean): Promise<void> {
@@ -348,7 +379,7 @@ class DataService {
       .from('notifications')
       .select('*')
       .eq('user_id', userId)
-      .order('date', { descending: true });
+      .order('date', { ascending: false });
     
     if (error) throw error;
     return (data || []).map(n => ({
@@ -461,6 +492,8 @@ class DataService {
       }]);
     
     if (error) throw error;
+
+    // Notifications are now handled by database triggers for maximum speed
   }
 
   async deleteDocument(id: string): Promise<void> {

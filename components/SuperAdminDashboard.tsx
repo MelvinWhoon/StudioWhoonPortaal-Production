@@ -843,9 +843,13 @@ const SuperAdminDashboard: React.FC = () => {
                 <form onSubmit={handleSaveUser}>
                   <div className="space-y-6">
                       <div>
-                        <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block">Naam & Email</label>
-                        <input required placeholder="Volledige naam" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none mb-3" value={newUser.name || ''} onChange={e=>setNewUser({...newUser, name: e.target.value})} />
-                        <input required type="email" placeholder="E-mailadres" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none" value={newUser.email || ''} onChange={e=>setNewUser({...newUser, email: e.target.value})} />
+                        <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block">Persoonlijke Gegevens</label>
+                        <div className="grid grid-cols-2 gap-4 mb-3">
+                          <input required placeholder="Voornaam" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none" value={newUser.firstName || ''} onChange={e=>setNewUser({...newUser, firstName: e.target.value})} />
+                          <input required placeholder="Achternaam" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none" value={newUser.lastName || ''} onChange={e=>setNewUser({...newUser, lastName: e.target.value})} />
+                        </div>
+                        <input required type="email" placeholder="E-mailadres" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none mb-3" value={newUser.email || ''} onChange={e=>setNewUser({...newUser, email: e.target.value})} />
+                        <input placeholder="Telefoonnummer" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none" value={newUser.phone || ''} onChange={e=>setNewUser({...newUser, phone: e.target.value})} />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
@@ -862,6 +866,16 @@ const SuperAdminDashboard: React.FC = () => {
                             <option value="">GEEN (GLOBAAL)</option>
                             {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                           </select>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block">Dossiernummer</label>
+                          <input placeholder="Dossiernummer" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none" value={newUser.caseNumber || ''} onChange={e=>setNewUser({...newUser, caseNumber: e.target.value})} />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block">Kavelnummer</label>
+                          <input placeholder="Kavelnummer" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none" value={newUser.plotNumber || ''} onChange={e=>setNewUser({...newUser, plotNumber: e.target.value})} />
                         </div>
                       </div>
                   </div>
