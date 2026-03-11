@@ -27,6 +27,24 @@ const Header: React.FC = () => {
     fetchProjects();
   }, [user]);
 
+  useEffect(() => {
+    // Add Google Translate script
+    if (!document.getElementById('google-translate-script')) {
+      const addScript = document.createElement('script');
+      addScript.id = 'google-translate-script';
+      addScript.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+      addScript.async = true;
+      document.body.appendChild(addScript);
+
+      (window as any).googleTranslateElementInit = () => {
+        new (window as any).google.translate.TranslateElement(
+          { pageLanguage: 'nl', autoDisplay: false },
+          'google_translate_element'
+        );
+      };
+    }
+  }, []);
+
   const langFlags = {
     nl: '🇳🇱',
     en: '🇬🇧',
@@ -35,6 +53,48 @@ const Header: React.FC = () => {
 
   return (
     <header className="h-20 bg-white border-b border-slate-100 flex items-center justify-between px-6 md:px-10 flex-shrink-0 z-30">
+      <style>{`
+        .translate-icon-wrapper {
+          position: relative;
+          width: 2rem;
+          height: 2rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 0.75rem;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        #google_translate_element {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          opacity: 0.001;
+          z-index: 10;
+          overflow: hidden;
+        }
+        #google_translate_element .goog-te-gadget {
+          width: 100%;
+          height: 100%;
+        }
+        #google_translate_element .goog-te-combo {
+          width: 100%;
+          height: 100%;
+          cursor: pointer;
+          position: absolute;
+          top: 0;
+          left: 0;
+        }
+        /* Hide the Google Translate top bar that appears when translating */
+        .skiptranslate > iframe.goog-te-banner-frame {
+          display: none !important;
+        }
+        body {
+          top: 0px !important;
+        }
+      `}</style>
       <div className="flex items-center gap-4">
         <button 
           onClick={() => setSidebarOpen(true)}
@@ -87,6 +147,12 @@ const Header: React.FC = () => {
                <span className="text-sm">{langFlags[l]}</span>
              </button>
            ))}
+           
+           {/* Google Translate Icon */}
+           <div className="translate-icon-wrapper opacity-40 hover:opacity-80 ml-1" title="Translate to other languages">
+             <span className="text-sm">🌐</span>
+             <div id="google_translate_element"></div>
+           </div>
         </div>
 
         <div className="flex items-center gap-3 px-5 py-2.5 rounded-2xl bg-slate-50 text-slate-400 text-[9px] font-black uppercase tracking-widest border border-slate-100">
