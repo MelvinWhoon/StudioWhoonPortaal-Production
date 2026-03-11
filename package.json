@@ -13,9 +13,13 @@
   "dependencies": {
     "@google/genai": "^1.40.0",
     "@supabase/supabase-js": "^2.98.0",
+    "@types/nodemailer": "^7.0.11",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
+    "html2pdf.js": "^0.14.0",
+    "nodemailer": "^8.0.2",
+    "qrcode.react": "^4.2.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "tsx": "^4.21.0"

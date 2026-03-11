@@ -2,6 +2,7 @@ import express from "express";
 import { createServer as createViteServer } from "vite";
 import dotenv from "dotenv";
 import cors from "cors";
+import nodemailer from "nodemailer";
 
 dotenv.config();
 
@@ -10,6 +11,48 @@ const PORT = 3000;
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
+
+// API Routes
+app.post("/api/send_mail", async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ success: false, message: "Email en wachtwoord zijn verplicht." });
+  }
+
+  try {
+    // In a real production environment, configure SMTP settings via env variables
+    // For now, we simulate success if SMTP is not configured, or use a test account
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || "smtp.example.com",
+      port: parseInt(process.env.SMTP_PORT || "587"),
+      secure: process.env.SMTP_SECURE === "true",
+      auth: {
+        user: process.env.SMTP_USER || "test",
+        pass: process.env.SMTP_PASS || "test",
+      },
+    });
+
+    const mailOptions = {
+      from: '"Global Interior Concepts" <no-reply@globalinteriorconcepts.com>',
+      to: email,
+      subject: "Uw account voor Global Interior Concepts is aangemaakt",
+      text: `Beste klant,\n\nUw account is succesvol aangemaakt.\n\nU kunt inloggen via: https://www.globalinteriorconcepts.com/\n\nUw inloggegevens:\nE-mailadres: ${email}\nWachtwoord: ${password}\n\nMet vriendelijke groet,\nGlobal Interior Concepts`,
+    };
+
+    // If no real SMTP is configured, we just log and return success
+    if (!process.env.SMTP_HOST) {
+      console.log("Simulating email send (no SMTP_HOST configured):", mailOptions);
+      return res.json({ success: true, message: "E-mail succesvol gesimuleerd (geen SMTP config)." });
+    }
+
+    await transporter.sendMail(mailOptions);
+    res.json({ success: true, message: "E-mail succesvol verzonden." });
+  } catch (error) {
+    console.error("Error sending email:", error);
+    res.status(500).json({ success: false, message: "Fout bij verzenden van e-mail." });
+  }
+});
 
 // Vite middleware for development
 async function startServer() {

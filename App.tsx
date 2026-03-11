@@ -101,6 +101,12 @@ const App: React.FC = () => {
     init();
   }, []);
 
+  useEffect(() => {
+    if (user?.role === UserRole.SUPER_ADMIN && window.location.pathname === '/create-user') {
+      setActiveView('Nieuwe Klant');
+    }
+  }, [user]);
+
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const login = async (email: string, password?: string) => {
@@ -123,7 +129,11 @@ const App: React.FC = () => {
 
         const projects = await dataService.getProjects();
         if (found.role === UserRole.SUPER_ADMIN) {
-          setActiveView('Statistieken');
+          if (window.location.pathname === '/create-user') {
+            setActiveView('Nieuwe Klant');
+          } else {
+            setActiveView('Statistieken');
+          }
           if (projects.length > 0) {
             setActiveProject(projects[0]);
           }
@@ -174,13 +184,17 @@ const App: React.FC = () => {
         ) : (
           <div className="flex h-screen font-inter overflow-hidden relative" style={{ backgroundColor: activeProject?.backgroundColor || '#edeae6' }}>
             <div 
-              className="absolute inset-0 z-0 bg-cover bg-center opacity-20 pointer-events-none"
+              className="absolute inset-0 z-0 bg-cover bg-center opacity-20 pointer-events-none print:hidden"
               style={{ backgroundImage: `url(https://www.whoon.com/wp-content/uploads/2026/02/2e51ae92f59d5cb308c03b8dd6b83d91.jpg)` }}
             />
-            <Sidebar />
+            <div className="print:hidden h-full flex flex-shrink-0">
+              <Sidebar />
+            </div>
             <div className="flex-1 flex flex-col min-w-0 z-10 relative">
-              <Header />
-              <main className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar">
+              <div className="print:hidden">
+                <Header />
+              </div>
+              <main className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar print:p-0 print:overflow-visible">
                 {user.role === UserRole.SUPER_ADMIN && <SuperAdminDashboard />}
                 {user.role === UserRole.PROJECT_ADMIN && <ProjectAdminDashboard />}
                 {user.role === UserRole.CUSTOMER && <CustomerPortal />}

@@ -4,6 +4,7 @@ import { useAuth, useTranslation } from '../App';
 import { dataService } from '../dataService';
 import { Project, MasterPackage, User, UserRole, ProjectStatus, Message, UserException } from '../types';
 import DashboardStats from './DashboardStats';
+import CreateUserPage from './CreateUserPage';
 import { IMAGES } from '../constants';
 
 const generateRandomPassword = () => {
@@ -734,6 +735,9 @@ const SuperAdminDashboard: React.FC = () => {
              </div>
           </div>
         );
+
+      case 'Nieuwe Klant':
+        return <CreateUserPage />;
 
       default: return null;
     }

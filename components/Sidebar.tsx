@@ -35,6 +35,7 @@ const Sidebar: React.FC = () => {
         { label: 'Statistieken', trans: t('stats_title'), icon: <Icons.Stats /> },
         { label: 'Projecten', trans: t('project_title'), icon: <Icons.Projects /> },
         { label: 'Gebruikers', trans: t('user_title'), icon: <Icons.Users /> },
+        { label: 'Nieuwe Klant', trans: 'Nieuwe Klant', icon: <Icons.Users /> },
         { label: 'Pakketten', trans: t('package_title'), icon: <Icons.Packages /> },
         { label: 'Uitzonderingen', trans: t('exceptions_title'), icon: <Icons.Exceptions /> },
         { label: 'Centrale Inbox', trans: 'Centrale Inbox', icon: <Icons.Inbox />, badge: escalatedCount > 0 }

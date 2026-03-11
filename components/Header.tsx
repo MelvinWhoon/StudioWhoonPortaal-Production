@@ -28,20 +28,34 @@ const Header: React.FC = () => {
   }, [user]);
 
   useEffect(() => {
+    const initGoogleTranslate = () => {
+      if ((window as any).google && (window as any).google.translate) {
+        const gtElement = document.getElementById('google_translate_element');
+        if (gtElement && gtElement.innerHTML.trim() === '') {
+          new (window as any).google.translate.TranslateElement(
+            { pageLanguage: 'nl', autoDisplay: false },
+            'google_translate_element'
+          );
+        }
+      }
+    };
+
     // Add Google Translate script
     if (!document.getElementById('google-translate-script')) {
+      (window as any).googleTranslateElementInit = initGoogleTranslate;
+      
       const addScript = document.createElement('script');
       addScript.id = 'google-translate-script';
       addScript.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
       addScript.async = true;
       document.body.appendChild(addScript);
-
-      (window as any).googleTranslateElementInit = () => {
-        new (window as any).google.translate.TranslateElement(
-          { pageLanguage: 'nl', autoDisplay: false },
-          'google_translate_element'
-        );
-      };
+    } else {
+      // If script is already loaded, try to initialize immediately or wait a bit
+      if ((window as any).google && (window as any).google.translate) {
+        initGoogleTranslate();
+      } else {
+        setTimeout(initGoogleTranslate, 500);
+      }
     }
   }, []);
 
@@ -73,7 +87,6 @@ const Header: React.FC = () => {
           height: 100%;
           opacity: 0.001;
           z-index: 10;
-          overflow: hidden;
         }
         #google_translate_element .goog-te-gadget {
           width: 100%;
