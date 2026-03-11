@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { useAuth, useTranslation } from '../App';
 import { dataService } from '../dataService';
 import { UserRole, Project } from '../types';
-import { Language } from '../translations';
 
 const Header: React.FC = () => {
   const { user, activeProject, setActiveProject, setSidebarOpen } = useAuth();
@@ -29,41 +28,29 @@ const Header: React.FC = () => {
 
   useEffect(() => {
     const initGoogleTranslate = () => {
-      if ((window as any).google && (window as any).google.translate) {
-        const gtElement = document.getElementById('google_translate_element');
-        if (gtElement && gtElement.innerHTML.trim() === '') {
-          new (window as any).google.translate.TranslateElement(
-            { pageLanguage: 'nl', autoDisplay: false },
-            'google_translate_element'
-          );
-        }
+      if ((window as any).google && (window as any).google.translate && (window as any).google.translate.TranslateElement) {
+        const gtElements = document.querySelectorAll('.google_translate_element');
+        gtElements.forEach(el => {
+          if (el.innerHTML.trim() === '') {
+            try {
+              new (window as any).google.translate.TranslateElement(
+                { pageLanguage: 'nl', autoDisplay: false },
+                el
+              );
+            } catch (e) {
+              console.error('Error initializing Google Translate in Header:', e);
+            }
+          }
+        });
       }
     };
 
-    // Add Google Translate script
-    if (!document.getElementById('google-translate-script')) {
-      (window as any).googleTranslateElementInit = initGoogleTranslate;
-      
-      const addScript = document.createElement('script');
-      addScript.id = 'google-translate-script';
-      addScript.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
-      addScript.async = true;
-      document.body.appendChild(addScript);
+    if ((window as any).google && (window as any).google.translate) {
+      initGoogleTranslate();
     } else {
-      // If script is already loaded, try to initialize immediately or wait a bit
-      if ((window as any).google && (window as any).google.translate) {
-        initGoogleTranslate();
-      } else {
-        setTimeout(initGoogleTranslate, 500);
-      }
+      setTimeout(initGoogleTranslate, 500);
     }
   }, []);
-
-  const langFlags = {
-    nl: '🇳🇱',
-    en: '🇬🇧',
-    es: '🇪🇸'
-  };
 
   return (
     <header className="h-20 bg-white border-b border-slate-100 flex items-center justify-between px-6 md:px-10 flex-shrink-0 z-30">
@@ -79,7 +66,7 @@ const Header: React.FC = () => {
           cursor: pointer;
           transition: all 0.2s;
         }
-        #google_translate_element {
+        .google_translate_element {
           position: absolute;
           top: 0;
           left: 0;
@@ -88,24 +75,17 @@ const Header: React.FC = () => {
           opacity: 0.001;
           z-index: 10;
         }
-        #google_translate_element .goog-te-gadget {
+        .google_translate_element .goog-te-gadget {
           width: 100%;
           height: 100%;
         }
-        #google_translate_element .goog-te-combo {
+        .google_translate_element .goog-te-combo {
           width: 100%;
           height: 100%;
           cursor: pointer;
           position: absolute;
           top: 0;
           left: 0;
-        }
-        /* Hide the Google Translate top bar that appears when translating */
-        .skiptranslate > iframe.goog-te-banner-frame {
-          display: none !important;
-        }
-        body {
-          top: 0px !important;
         }
       `}</style>
       <div className="flex items-center gap-4">
@@ -151,20 +131,10 @@ const Header: React.FC = () => {
       <div className="flex items-center gap-6">
         {/* Language Switcher Small */}
         <div className="hidden sm:flex bg-slate-50 p-1 rounded-2xl border border-slate-100">
-           {(['nl', 'en', 'es'] as Language[]).map(l => (
-             <button 
-               key={l}
-               onClick={() => setLang(l)}
-               className={`w-8 h-8 flex items-center justify-center rounded-xl transition-all ${lang === l ? 'bg-white shadow-sm border border-slate-100 scale-110' : 'opacity-40 hover:opacity-80'}`}
-             >
-               <span className="text-sm">{langFlags[l]}</span>
-             </button>
-           ))}
-           
            {/* Google Translate Icon */}
-           <div className="translate-icon-wrapper opacity-40 hover:opacity-80 ml-1" title="Translate to other languages">
+           <div className="translate-icon-wrapper opacity-40 hover:opacity-80 mx-1" title="Translate to other languages">
              <span className="text-sm">🌐</span>
-             <div id="google_translate_element"></div>
+             <div className="google_translate_element"></div>
            </div>
         </div>
 

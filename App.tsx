@@ -99,6 +99,41 @@ const App: React.FC = () => {
       }
     };
     init();
+
+    // Add Google Translate script globally
+    const initGoogleTranslate = () => {
+      if ((window as any).google && (window as any).google.translate && (window as any).google.translate.TranslateElement) {
+        const gtElements = document.querySelectorAll('.google_translate_element');
+        gtElements.forEach(el => {
+          if (el.innerHTML.trim() === '') {
+            try {
+              new (window as any).google.translate.TranslateElement(
+                { pageLanguage: 'nl', autoDisplay: false },
+                el
+              );
+            } catch (e) {
+              console.error('Error initializing Google Translate:', e);
+            }
+          }
+        });
+      }
+    };
+
+    if (!document.getElementById('google-translate-script')) {
+      (window as any).googleTranslateElementInit = initGoogleTranslate;
+      
+      const addScript = document.createElement('script');
+      addScript.id = 'google-translate-script';
+      addScript.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+      addScript.async = true;
+      document.body.appendChild(addScript);
+    } else {
+      if ((window as any).google && (window as any).google.translate) {
+        initGoogleTranslate();
+      } else {
+        setTimeout(initGoogleTranslate, 500);
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -170,7 +205,7 @@ const App: React.FC = () => {
       <div className="min-h-screen flex items-center justify-center bg-[#edeae6]">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-[#8C7864] border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-[10px] font-black uppercase tracking-widest text-[#8C7864]">Please wait...</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-[#8C7864]">Aligning the blueprints for your future....</p>
         </div>
       </div>
     );

@@ -1,8 +1,7 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MOCK_USERS, IMAGES } from '../constants';
 import { useTranslation } from '../App';
-import { Language } from '../translations';
 import { UserRole } from '../types';
 
 interface LoginProps {
@@ -13,7 +12,33 @@ interface LoginProps {
 const Login: React.FC<LoginProps> = ({ onLogin, isLoggingIn }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { lang, setLang, t } = useTranslation();
+  const { t } = useTranslation();
+
+  useEffect(() => {
+    const initGoogleTranslate = () => {
+      if ((window as any).google && (window as any).google.translate && (window as any).google.translate.TranslateElement) {
+        const gtElements = document.querySelectorAll('.google_translate_element');
+        gtElements.forEach(el => {
+          if (el.innerHTML.trim() === '') {
+            try {
+              new (window as any).google.translate.TranslateElement(
+                { pageLanguage: 'nl', autoDisplay: false },
+                el
+              );
+            } catch (e) {
+              console.error('Error initializing Google Translate in Login:', e);
+            }
+          }
+        });
+      }
+    };
+
+    if ((window as any).google && (window as any).google.translate) {
+      initGoogleTranslate();
+    } else {
+      setTimeout(initGoogleTranslate, 500);
+    }
+  }, []);
 
   const getTranslatedRole = (role: UserRole) => {
     switch(role) {
@@ -37,18 +62,6 @@ const Login: React.FC<LoginProps> = ({ onLogin, isLoggingIn }) => {
       />
       
       <div className="absolute inset-0 z-10 bg-white/75 backdrop-blur-[2px]" />
-
-      <div className="absolute top-6 right-6 flex gap-2 z-30">
-        {(['nl', 'en', 'es'] as Language[]).map(l => (
-          <button 
-            key={l}
-            onClick={() => setLang(l)}
-            className={`w-10 h-10 flex items-center justify-center rounded-full border transition-all ${lang === l ? 'bg-[#8C7864] text-white border-[#8C7864] shadow-lg' : 'bg-white/80 backdrop-blur-md border-slate-200 hover:bg-white text-slate-600'}`}
-          >
-            <span className="text-sm font-bold">{l.toUpperCase()}</span>
-          </button>
-        ))}
-      </div>
 
       <div className="w-full max-w-md bg-white rounded-[3rem] shadow-[0_35px_60px_-15px_rgba(0,0,0,0.2)] overflow-hidden animate-in fade-in zoom-in duration-700 border border-slate-100 relative z-20">
         <div className="p-10 md:p-12">
@@ -83,6 +96,12 @@ const Login: React.FC<LoginProps> = ({ onLogin, isLoggingIn }) => {
                 placeholder="********"
               />
             </div>
+            
+            <div className="flex flex-col items-center justify-center pt-2 pb-4">
+              <label className="block text-[10px] font-black uppercase text-slate-400 mb-2 tracking-widest">Taal / Language</label>
+              <div className="google_translate_element w-full flex justify-center overflow-hidden rounded-xl border border-slate-100 bg-slate-50 p-2"></div>
+            </div>
+
             <button
               type="submit"
               disabled={isLoggingIn}
@@ -124,6 +143,16 @@ const Login: React.FC<LoginProps> = ({ onLogin, isLoggingIn }) => {
           0% { transform: scale(1); }
           50% { transform: scale(1.08); }
           100% { transform: scale(1); }
+        }
+        .google_translate_element select {
+          width: 100%;
+          padding: 8px;
+          border-radius: 8px;
+          border: 1px solid #e2e8f0;
+          background-color: white;
+          font-size: 14px;
+          color: #475569;
+          outline: none;
         }
       `}</style>
     </div>

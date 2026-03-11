@@ -35,6 +35,24 @@ class DataService {
     }
   }
 
+  async keepAlive() {
+    try {
+      // Perform a minimal query to keep the database active
+      const { data, error } = await supabase
+        .from('projects')
+        .select('id')
+        .limit(1);
+      
+      if (error) {
+        console.error('Keep-alive query error:', error);
+      } else {
+        console.log('Keep-alive query successful at', new Date().toISOString());
+      }
+    } catch (e) {
+      console.error('Keep-alive exception:', e);
+    }
+  }
+
   async ensureSeeded() {
     // No-op for Supabase implementation as we want to avoid mock data
     console.log('Supabase mode active. Skipping local seeding.');

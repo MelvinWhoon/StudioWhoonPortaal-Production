@@ -3,11 +3,39 @@ import { createServer as createViteServer } from "vite";
 import dotenv from "dotenv";
 import cors from "cors";
 import nodemailer from "nodemailer";
+import cron from "node-cron";
+import { createClient } from "@supabase/supabase-js";
 
 dotenv.config();
 
 const app = express();
 const PORT = 3000;
+
+// Setup cron job to keep Supabase alive
+// Runs every day at 03:00 AM
+cron.schedule("0 3 * * *", async () => {
+  console.log("Running daily keep-alive cron job for Supabase...");
+  try {
+    const supabaseUrl = process.env.VITE_SUPABASE_URL;
+    const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseKey) {
+      console.error("Keep-alive failed: Missing Supabase URL or Key in environment variables.");
+      return;
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { error } = await supabase.from('projects').select('id').limit(1);
+    
+    if (error) {
+      console.error('Keep-alive query error:', error);
+    } else {
+      console.log('Keep-alive query successful at', new Date().toISOString());
+    }
+  } catch (e) {
+    console.error('Keep-alive exception:', e);
+  }
+});
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
