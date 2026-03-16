@@ -106,7 +106,7 @@ const SuperAdminDashboard: React.FC = () => {
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [editingPackageId, setEditingPackageId] = useState<string | null>(null);
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
-  const [newUser, setNewUser] = useState<Partial<User>>({ role: UserRole.PROJECT_ADMIN, isActive: true });
+  const [newUser, setNewUser] = useState<Partial<User>>({ role: UserRole.CUSTOMER, isActive: true });
   const [newProject, setNewProject] = useState<Partial<Project>>({ 
     status: ProjectStatus.ACTIVE, 
     additionalPhotos: [],
@@ -130,6 +130,8 @@ const SuperAdminDashboard: React.FC = () => {
   const projectPhotosRef = useRef<HTMLInputElement>(null);
   const packagePhotosRef = useRef<HTMLInputElement>(null);
 
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+
   const refreshData = async () => {
     setIsLoading(true);
     try {
@@ -148,7 +150,10 @@ const SuperAdminDashboard: React.FC = () => {
     }
   };
 
-  useEffect(() => { refreshData(); }, [activeView]);
+  useEffect(() => { 
+    setIsInitialLoading(true);
+    refreshData().catch(console.error).finally(() => setIsInitialLoading(false)); 
+  }, [activeView]);
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [activeChatId, messages]);
 
   const filteredUsers = useMemo(() => {
@@ -171,6 +176,17 @@ const SuperAdminDashboard: React.FC = () => {
       return matchesProject && matchesCategory;
     });
   }, [masterPackages, packageProjectFilter, packageCategoryFilter]);
+
+  if (isInitialLoading && !projects.length) {
+    return (
+      <div className="flex-1 flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-[#8C7864] border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-[#8C7864]">Aligning the blueprints for your future....</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleDeescalate = async (customerId: string) => {
     setConfirmData({
@@ -499,7 +515,7 @@ const SuperAdminDashboard: React.FC = () => {
                       <option value={UserRole.PROJECT_ADMIN}>PROJECT ADMIN</option>
                       <option value={UserRole.CUSTOMER}>KLANT</option>
                    </select>
-                   <button onClick={() => { setEditingUserId(null); setNewUser({ role: UserRole.PROJECT_ADMIN, isActive: true }); setIsUserModalOpen(true); setGeneratedPass(null); }} className="px-6 py-3 bg-[#8C7864] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-[#8C7864]/20 active:scale-95 transition-all">Nieuwe Gebruiker</button>
+                   <button onClick={() => { setEditingUserId(null); setNewUser({ role: UserRole.CUSTOMER, isActive: true }); setIsUserModalOpen(true); setGeneratedPass(null); }} className="px-6 py-3 bg-[#8C7864] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-[#8C7864]/20 active:scale-95 transition-all">Nieuwe Gebruiker</button>
                 </div>
              </div>
              <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden overflow-x-auto">
@@ -843,7 +859,7 @@ const SuperAdminDashboard: React.FC = () => {
                     <div className="bg-white p-6 rounded-2xl border-2 border-dashed border-green-200 text-2xl font-black text-slate-900 tracking-widest mb-10">
                        {generatedPass}
                     </div>
-                    <button onClick={() => { setIsUserModalOpen(false); setGeneratedPass(null); setFeedback({ title: "Gereed", type: 'success' }); }} className="w-full py-4 bg-green-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest">Klaar</button>
+                    <button onClick={() => { setIsUserModalOpen(false); setGeneratedPass(null); }} className="w-full py-4 bg-green-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest">Klaar</button>
                  </div>
                ) : (
                 <form onSubmit={handleSaveUser}>
@@ -882,6 +898,23 @@ const SuperAdminDashboard: React.FC = () => {
                         <div>
                           <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block">Kavelnummer</label>
                           <input placeholder="Kavelnummer" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none" value={newUser.plotNumber || ''} onChange={e=>setNewUser({...newUser, plotNumber: e.target.value})} />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block">Pakket</label>
+                          <select className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold" value={newUser.masterPackageId || ''} onChange={e=>{
+                            const pkgId = e.target.value;
+                            const pkg = masterPackages.find(p => p.id === pkgId);
+                            setNewUser({...newUser, masterPackageId: pkgId, agreedPackagePrice: pkg?.price || undefined});
+                          }}>
+                            <option value="">GEEN PAKKET</option>
+                            {masterPackages.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block">Afgesproken Prijs (€)</label>
+                          <input type="number" placeholder="Prijs" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none" value={newUser.agreedPackagePrice || ''} onChange={e=>setNewUser({...newUser, agreedPackagePrice: Number(e.target.value)})} />
                         </div>
                       </div>
                   </div>

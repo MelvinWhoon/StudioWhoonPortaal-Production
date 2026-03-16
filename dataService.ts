@@ -1,6 +1,6 @@
 import { 
   Project, User, PortalDocument, Message, Notification,
-  ProjectStatus, UserRole, MasterPackage, MessageCategory 
+  ProjectStatus, UserRole, MasterPackage, MessageCategory, Payment
 } from './types';
 import { GoogleGenAI } from "@google/genai";
 import { supabase } from './src/supabaseClient';
@@ -16,6 +16,11 @@ export interface DashboardData {
   chats: {
     open: number;
     resolved: number;
+  };
+  financials: {
+    totalRevenue: number;
+    totalPaid: number;
+    totalOutstanding: number;
   };
 }
 
@@ -79,10 +84,11 @@ class DataService {
   }
 
   async getDashboardStats(projectId?: string): Promise<DashboardData> {
-    const [projects, allUsers, allMessages] = await Promise.all([
+    const [projects, allUsers, allMessages, allPayments] = await Promise.all([
       this.getProjects(),
       this.getUsers(),
-      this.getAllMessages()
+      this.getAllMessages(),
+      this.getPayments(projectId)
     ]);
 
     const filteredProjects = projectId ? projects.filter(p => p.id === projectId) : projects;
@@ -138,6 +144,17 @@ class DataService {
       trend.push({ month: months[targetMonth].toUpperCase(), count });
     }
 
+    let totalRevenue = 0;
+    let totalPaid = 0;
+
+    customers.forEach(c => {
+      totalRevenue += c.agreedPackagePrice || 0;
+    });
+
+    allPayments.forEach(p => {
+      totalPaid += Number(p.amount) || 0;
+    });
+
     return {
       totalProjects: filteredProjects.length,
       projectsByStatus: statusMap,
@@ -149,6 +166,11 @@ class DataService {
       chats: {
         open: openChats,
         resolved: resolvedChats
+      },
+      financials: {
+        totalRevenue,
+        totalPaid,
+        totalOutstanding: totalRevenue - totalPaid
       }
     };
   }
@@ -247,6 +269,7 @@ class DataService {
       apartmentId: u.apartment_id,
       isActive: u.is_active,
       masterPackageId: u.master_package_id,
+      agreedPackagePrice: u.agreed_package_price,
       createdAt: u.created_at,
       apartmentDetails: typeof u.apartment_details === 'string' ? JSON.parse(u.apartment_details) : (u.apartment_details || {}),
       constructionProgress: typeof u.construction_progress === 'string' ? JSON.parse(u.construction_progress) : (u.construction_progress || {}),
@@ -271,9 +294,10 @@ class DataService {
         password: userData.password,
         is_active: userData.isActive,
         is_password_set: userData.isPasswordSet || false,
-        project_id: userData.projectId,
-        apartment_id: userData.apartmentId,
-        master_package_id: userData.masterPackageId,
+        project_id: userData.projectId || null,
+        apartment_id: userData.apartmentId || null,
+        master_package_id: userData.masterPackageId || null,
+        agreed_package_price: userData.agreedPackagePrice,
         apartment_details: JSON.stringify(userData.apartmentDetails || {}),
         construction_progress: JSON.stringify(userData.constructionProgress || {}),
         remarks: userData.remarks,
@@ -281,7 +305,12 @@ class DataService {
         created_at: new Date().toISOString()
       }]);
     
-    if (error) throw error;
+    if (error) {
+      if (error.code === 'PGRST204' || error.code === '42703' || error.message?.includes('column')) {
+        throw new Error("Database fout: Er ontbreken nieuwe kolommen in de 'users' tabel (zoals case_number, plot_number, etc.). Voer het SQL-script uit in Supabase om deze toe te voegen.");
+      }
+      throw error;
+    }
     return { success: true };
   }
 
@@ -300,9 +329,10 @@ class DataService {
         password: updates.password,
         is_active: updates.isActive,
         is_password_set: updates.isPasswordSet,
-        project_id: updates.projectId,
-        apartment_id: updates.apartmentId,
-        master_package_id: updates.masterPackageId,
+        project_id: updates.projectId === '' ? null : updates.projectId,
+        apartment_id: updates.apartmentId === '' ? null : updates.apartmentId,
+        master_package_id: updates.masterPackageId === '' ? null : updates.masterPackageId,
+        agreed_package_price: updates.agreedPackagePrice,
         apartment_details: updates.apartmentDetails ? JSON.stringify(updates.apartmentDetails) : undefined,
         construction_progress: updates.constructionProgress ? JSON.stringify(updates.constructionProgress) : undefined,
         remarks: updates.remarks,
@@ -310,7 +340,12 @@ class DataService {
       })
       .eq('id', id);
     
-    if (error) throw error;
+    if (error) {
+      if (error.code === 'PGRST204' || error.code === '42703' || error.message?.includes('column')) {
+        throw new Error("Database fout: Er ontbreken nieuwe kolommen in de 'users' tabel (zoals case_number, plot_number, etc.). Voer het SQL-script uit in Supabase om deze toe te voegen.");
+      }
+      throw error;
+    }
     return { success: true };
   }
 
@@ -324,41 +359,123 @@ class DataService {
     return { success: true };
   }
 
-  async getAllMessages(): Promise<Message[]> {
-    const { data, error } = await supabase
-      .from('messages')
-      .select('*')
-      .order('date', { ascending: true });
+  async getPayments(projectId?: string, customerId?: string): Promise<Payment[]> {
+    try {
+      let query = supabase.from('payments').select('*').order('date', { ascending: false });
+      
+      if (projectId) query = query.eq('project_id', projectId);
+      if (customerId) query = query.eq('customer_id', customerId);
+      
+      const { data, error } = await query;
+      if (error) {
+        if (error.code === 'PGRST205') return [];
+        throw error;
+      }
+      
+      return (data || []).map(p => ({
+        id: p.id,
+        customerId: p.customer_id,
+        projectId: p.project_id,
+        amount: p.amount,
+        date: p.date,
+        note: p.note,
+        registeredBy: p.registered_by
+      }));
+    } catch (e: any) {
+      console.error('Error fetching payments:', e);
+      return [];
+    }
+  }
+
+  async createPayment(payment: Partial<Payment>) {
+    const id = `pay${Math.random().toString(36).substr(2, 9)}`;
+    const { error } = await supabase
+      .from('payments')
+      .insert([{
+        id,
+        customer_id: payment.customerId,
+        project_id: payment.projectId,
+        amount: payment.amount,
+        date: payment.date || new Date().toISOString(),
+        note: payment.note,
+        registered_by: payment.registeredBy
+      }]);
     
-    if (error) throw error;
-    return (data || []).map(m => ({
-      ...m,
-      projectId: m.project_id,
-      customerId: m.customer_id,
-      senderId: m.sender_id,
-      senderName: m.sender_name,
-      isEscalated: m.is_escalated,
-      isArchived: m.is_archived
-    }));
+    if (error) {
+      if (error.code === 'PGRST205') {
+        throw new Error("De 'payments' tabel bestaat nog niet in de database. Neem contact op met de beheerder.");
+      }
+      throw error;
+    }
+    return { success: true };
+  }
+
+  async deletePayment(id: string) {
+    const { error } = await supabase
+      .from('payments')
+      .delete()
+      .eq('id', id);
+    
+    if (error) {
+      if (error.code === 'PGRST205') {
+        throw new Error("De 'payments' tabel bestaat nog niet in de database. Neem contact op met de beheerder.");
+      }
+      throw error;
+    }
+    return { success: true };
+  }
+
+  async getAllMessages(): Promise<Message[]> {
+    try {
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*')
+        .order('date', { ascending: true });
+      
+      if (error) {
+        if (error.code === 'PGRST205') return [];
+        throw error;
+      }
+      return (data || []).map(m => ({
+        ...m,
+        projectId: m.project_id,
+        customerId: m.customer_id,
+        senderId: m.sender_id,
+        senderName: m.sender_name,
+        isEscalated: m.is_escalated,
+        isArchived: m.is_archived
+      }));
+    } catch (e: any) {
+      console.error('Error fetching all messages:', e);
+      return [];
+    }
   }
 
   async getMessages(userId: string): Promise<Message[]> {
-    const { data, error } = await supabase
-      .from('messages')
-      .select('*')
-      .eq('customer_id', userId)
-      .order('date', { ascending: true });
-    
-    if (error) throw error;
-    return (data || []).map(m => ({
-      ...m,
-      projectId: m.project_id,
-      customerId: m.customer_id,
-      senderId: m.sender_id,
-      senderName: m.sender_name,
-      isEscalated: m.is_escalated,
-      isArchived: m.is_archived
-    }));
+    try {
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('customer_id', userId)
+        .order('date', { ascending: true });
+      
+      if (error) {
+        if (error.code === 'PGRST205') return [];
+        throw error;
+      }
+      return (data || []).map(m => ({
+        ...m,
+        projectId: m.project_id,
+        customerId: m.customer_id,
+        senderId: m.sender_id,
+        senderName: m.sender_name,
+        isEscalated: m.is_escalated,
+        isArchived: m.is_archived
+      }));
+    } catch (e: any) {
+      console.error('Error fetching messages:', e);
+      return [];
+    }
   }
 
   async sendMessage(projectId: string, customerId: string, senderId: string, senderName: string, role: UserRole, text: string, category?: MessageCategory): Promise<void> {
@@ -415,18 +532,26 @@ class DataService {
   }
 
   async getNotifications(userId: string): Promise<Notification[]> {
-    const { data, error } = await supabase
-      .from('notifications')
-      .select('*')
-      .eq('user_id', userId)
-      .order('date', { ascending: false });
-    
-    if (error) throw error;
-    return (data || []).map(n => ({
-      ...n,
-      userId: n.user_id,
-      isRead: n.is_read
-    }));
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', userId)
+        .order('date', { ascending: false });
+      
+      if (error) {
+        if (error.code === 'PGRST205') return [];
+        throw error;
+      }
+      return (data || []).map(n => ({
+        ...n,
+        userId: n.user_id,
+        isRead: n.is_read
+      }));
+    } catch (e: any) {
+      console.error('Error fetching notifications:', e);
+      return [];
+    }
   }
 
   async markNotificationsRead(userId: string): Promise<void> {
@@ -439,18 +564,26 @@ class DataService {
   }
 
   async getMasterPackages(projectId?: string): Promise<MasterPackage[]> {
-    let query = supabase.from('master_packages').select('*');
-    if (projectId) query = query.eq('project_id', projectId);
-    
-    const { data, error } = await query;
-    if (error) throw error;
-    return (data || []).map(p => ({
-      ...p,
-      projectId: p.project_id,
-      optionIds: typeof p.option_ids === 'string' ? JSON.parse(p.option_ids) : (p.option_ids || []),
-      inclusions: typeof p.inclusions === 'string' ? JSON.parse(p.inclusions) : (p.inclusions || []),
-      photos: typeof p.photos === 'string' ? JSON.parse(p.photos) : (p.photos || [])
-    }));
+    try {
+      let query = supabase.from('master_packages').select('*');
+      if (projectId) query = query.eq('project_id', projectId);
+      
+      const { data, error } = await query;
+      if (error) {
+        if (error.code === 'PGRST205') return [];
+        throw error;
+      }
+      return (data || []).map(p => ({
+        ...p,
+        projectId: p.project_id,
+        optionIds: typeof p.option_ids === 'string' ? JSON.parse(p.option_ids) : (p.option_ids || []),
+        inclusions: typeof p.inclusions === 'string' ? JSON.parse(p.inclusions) : (p.inclusions || []),
+        photos: typeof p.photos === 'string' ? JSON.parse(p.photos) : (p.photos || [])
+      }));
+    } catch (e: any) {
+      console.error('Error fetching master packages:', e);
+      return [];
+    }
   }
 
   async createMasterPackage(pkg: Partial<MasterPackage>) {
@@ -468,7 +601,12 @@ class DataService {
         option_ids: JSON.stringify(pkg.optionIds || [])
       }]);
     
-    if (error) throw error;
+    if (error) {
+      if (error.code === 'PGRST205') {
+        throw new Error("De 'master_packages' tabel bestaat nog niet in de database. Neem contact op met de beheerder.");
+      }
+      throw error;
+    }
     return { success: true };
   }
 
@@ -486,7 +624,12 @@ class DataService {
       })
       .eq('id', id);
     
-    if (error) throw error;
+    if (error) {
+      if (error.code === 'PGRST205') {
+        throw new Error("De 'master_packages' tabel bestaat nog niet in de database. Neem contact op met de beheerder.");
+      }
+      throw error;
+    }
     return { success: true };
   }
 
@@ -496,24 +639,37 @@ class DataService {
       .delete()
       .eq('id', id);
     
-    if (error) throw error;
+    if (error) {
+      if (error.code === 'PGRST205') {
+        throw new Error("De 'master_packages' tabel bestaat nog niet in de database. Neem contact op met de beheerder.");
+      }
+      throw error;
+    }
     return { success: true };
   }
 
   async getDocuments(userId: string): Promise<PortalDocument[]> {
-    const { data, error } = await supabase
-      .from('portal_documents')
-      .select('*')
-      .eq('customer_id', userId);
-    
-    if (error) throw error;
-    return (data || []).map(d => ({
-      ...d,
-      projectId: d.project_id,
-      customerId: d.customer_id,
-      uploadedBy: d.uploaded_by,
-      externalUrl: d.external_url
-    }));
+    try {
+      const { data, error } = await supabase
+        .from('portal_documents')
+        .select('*')
+        .eq('customer_id', userId);
+      
+      if (error) {
+        if (error.code === 'PGRST205') return [];
+        throw error;
+      }
+      return (data || []).map(d => ({
+        ...d,
+        projectId: d.project_id,
+        customerId: d.customer_id,
+        uploadedBy: d.uploaded_by,
+        externalUrl: d.external_url
+      }));
+    } catch (e: any) {
+      console.error('Error fetching documents:', e);
+      return [];
+    }
   }
 
   async uploadDocument(projectId: string, customerId: string, fileName: string, uploadedBy: string, role: UserRole, size: string, base64Data: string): Promise<void> {
@@ -531,7 +687,12 @@ class DataService {
         external_url: base64Data
       }]);
     
-    if (error) throw error;
+    if (error) {
+      if (error.code === 'PGRST205') {
+        throw new Error("De 'portal_documents' tabel bestaat nog niet in de database. Neem contact op met de beheerder.");
+      }
+      throw error;
+    }
 
     // Notifications are now handled by database triggers for maximum speed
   }
@@ -542,7 +703,12 @@ class DataService {
       .delete()
       .eq('id', id);
     
-    if (error) throw error;
+    if (error) {
+      if (error.code === 'PGRST205') {
+        throw new Error("De 'portal_documents' tabel bestaat nog niet in de database. Neem contact op met de beheerder.");
+      }
+      throw error;
+    }
   }
 }
 

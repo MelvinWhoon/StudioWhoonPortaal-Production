@@ -55,7 +55,8 @@ const Sidebar: React.FC = () => {
         { label: 'Mijn Appartement', trans: t('my_apartment'), icon: <Icons.Projects /> },
         { label: 'Mijn Pakket', trans: t('my_package'), icon: <Icons.Packages /> },
         { label: 'Documenten', trans: t('documents'), icon: <Icons.Documents /> },
-        { label: 'Berichten', trans: t('notifications'), icon: <Icons.Inbox /> }
+        { label: 'Berichten', trans: t('notifications'), icon: <Icons.Inbox /> },
+        { label: 'Financieel', trans: 'Financieel', icon: <Icons.Stats /> }
       ];
     }
     return [];

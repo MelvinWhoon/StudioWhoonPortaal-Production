@@ -43,6 +43,15 @@ const CustomerPortal: React.FC = () => {
   const msgEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+
+  const [payments, setPayments] = useState<any[]>([]);
+  useEffect(() => {
+    if (user && activeView === 'Financieel') {
+      dataService.getPayments(user.projectId, user.id).then(setPayments);
+    }
+  }, [user, activeView]);
+
   const refreshDocs = async () => {
     if (user) {
       const allDocs = await dataService.getDocuments(user.id);
@@ -52,14 +61,30 @@ const CustomerPortal: React.FC = () => {
 
   useEffect(() => {
     if (user) {
-      refreshDocs();
-      dataService.getMessages(user.id).then(setMessages);
-      dataService.getNotifications(user.id).then(setNotifications);
-      dataService.getMasterPackages(activeProject?.id).then(setPackages);
+      setIsInitialLoading(true);
+      Promise.all([
+        refreshDocs(),
+        dataService.getMessages(user.id).then(setMessages),
+        dataService.getNotifications(user.id).then(setNotifications),
+        dataService.getMasterPackages(activeProject?.id).then(setPackages)
+      ])
+      .catch(console.error)
+      .finally(() => setIsInitialLoading(false));
     }
   }, [user, activeView, activeProject]);
 
   useEffect(() => { msgEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+
+  if (isInitialLoading) {
+    return (
+      <div className="flex-1 flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-[#8C7864] border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-[#8C7864]">Aligning the blueprints for your future....</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -113,6 +138,75 @@ const CustomerPortal: React.FC = () => {
   };
 
   const currentPackage = packages.find(mp => mp.id === user?.masterPackageId);
+
+  if (activeView === 'Financieel') {
+    const totalCosts = user?.agreedPackagePrice || 0;
+    const totalPaid = payments.reduce((sum, p) => sum + Number(p.amount), 0);
+    const outstanding = totalCosts - totalPaid;
+    
+    return (
+      <div className="space-y-12 animate-in fade-in">
+        <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">Financieel Overzicht</h1>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+            <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest block mb-4">Totale Kosten</span>
+            <div className="flex items-end justify-between">
+              <span className="text-3xl font-black text-slate-900 tracking-tighter">€{totalCosts.toLocaleString('nl-NL')}</span>
+              <span className="text-2xl opacity-20">💰</span>
+            </div>
+          </div>
+          <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+            <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest block mb-4">Totaal Betaald</span>
+            <div className="flex items-end justify-between">
+              <span className="text-3xl font-black text-green-600 tracking-tighter">€{totalPaid.toLocaleString('nl-NL')}</span>
+              <span className="text-2xl opacity-20">✅</span>
+            </div>
+          </div>
+          <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+            <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest block mb-4">Openstaand Bedrag</span>
+            <div className="flex items-end justify-between">
+              <span className="text-3xl font-black text-orange-500 tracking-tighter">€{outstanding.toLocaleString('nl-NL')}</span>
+              <span className="text-2xl opacity-20">⏳</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-[2.5rem] border border-slate-100 overflow-hidden shadow-sm">
+          <div className="p-8 border-b border-slate-50">
+            <h2 className="text-sm font-black uppercase tracking-widest text-slate-900">Betalingshistorie</h2>
+          </div>
+          <table className="w-full text-left">
+            <thead className="bg-slate-50/50">
+              <tr>
+                <th className="p-8 text-[10px] font-black uppercase text-slate-400">Datum</th>
+                <th className="p-8 text-[10px] font-black uppercase text-slate-400">Bedrag</th>
+                <th className="p-8 text-[10px] font-black uppercase text-slate-400">Notitie</th>
+                <th className="p-8 text-[10px] font-black uppercase text-slate-400">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {payments.map(p => (
+                <tr key={p.id} className="hover:bg-slate-50 transition-colors">
+                  <td className="p-8 text-xs text-slate-500 font-bold">{new Date(p.date).toLocaleDateString('nl-NL')}</td>
+                  <td className="p-8 text-sm font-black text-slate-900 tracking-tight">€{Number(p.amount).toLocaleString('nl-NL')}</td>
+                  <td className="p-8 text-xs text-slate-500">{p.note || '-'}</td>
+                  <td className="p-8">
+                    <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-[10px] font-black uppercase tracking-widest">Betaald</span>
+                  </td>
+                </tr>
+              ))}
+              {payments.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="p-24 text-center text-[10px] font-black uppercase text-slate-300 italic">Geen betalingen gevonden</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  }
 
   if (activeView === 'Berichten') {
     return (
@@ -272,15 +366,6 @@ const CustomerPortal: React.FC = () => {
                       ))}
                    </ul>
                 </div>
-                {currentPackage?.price && (
-                  <div className="mt-12 pt-8 border-t border-slate-100 flex items-center justify-between">
-                    <div>
-                       <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest block mb-1">Indicatieve Pakketprijs</span>
-                       <span className="text-4xl font-black text-slate-900 tracking-tighter">€ {currentPackage.price.toLocaleString()}</span>
-                    </div>
-                    <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-3xl">🏷️</div>
-                  </div>
-                )}
              </div>
           </div>
         </div>

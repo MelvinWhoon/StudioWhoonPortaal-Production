@@ -31,6 +31,7 @@ const CreateUserPage: React.FC = () => {
     role: UserRole.CUSTOMER,
     project_id: '',
     master_package_id: '',
+    agreed_package_price: '',
     case_number: '',
     plot_number: ''
   });
@@ -62,7 +63,17 @@ const CreateUserPage: React.FC = () => {
     
     // Reset package if project changes
     if (name === 'project_id') {
-      setFormData(prev => ({ ...prev, master_package_id: '' }));
+      setFormData(prev => ({ ...prev, master_package_id: '', agreed_package_price: '' }));
+    }
+
+    // Pre-fill price when package changes
+    if (name === 'master_package_id') {
+      const selectedPkg = masterPackages.find(p => p.id === value);
+      if (selectedPkg && selectedPkg.price) {
+        setFormData(prev => ({ ...prev, agreed_package_price: selectedPkg.price.toString() }));
+      } else {
+        setFormData(prev => ({ ...prev, agreed_package_price: '' }));
+      }
     }
   };
 
@@ -83,6 +94,7 @@ const CreateUserPage: React.FC = () => {
         projectId: formData.project_id || undefined,
         apartmentId: formData.plot_number || undefined, // Using plot_number as apartmentId for now
         masterPackageId: formData.master_package_id || undefined,
+        agreedPackagePrice: formData.agreed_package_price ? Number(formData.agreed_package_price) : undefined,
         firstName: formData.first_name,
         lastName: formData.last_name,
         phone: formData.phone,
@@ -313,12 +325,16 @@ const CreateUserPage: React.FC = () => {
                 </select>
              </div>
              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Bouwnummer / Plot</label>
-                <input type="text" name="plot_number" value={formData.plot_number} onChange={handleChange} className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm outline-none focus:ring-4 focus:ring-[#8C7864]/10 transition-all" placeholder="Bijv. BNR 12" />
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Afgesproken Prijs (€)</label>
+                <input type="number" name="agreed_package_price" value={formData.agreed_package_price} onChange={handleChange} className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm outline-none focus:ring-4 focus:ring-[#8C7864]/10 transition-all" placeholder="Bijv. 15000" />
              </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+             <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Bouwnummer / Plot</label>
+                <input type="text" name="plot_number" value={formData.plot_number} onChange={handleChange} className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm outline-none focus:ring-4 focus:ring-[#8C7864]/10 transition-all" placeholder="Bijv. BNR 12" />
+             </div>
              <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Dossiernummer</label>
                 <input type="text" name="case_number" value={formData.case_number} onChange={handleChange} className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm outline-none focus:ring-4 focus:ring-[#8C7864]/10 transition-all" placeholder="Bijv. DOS-2026-001" />

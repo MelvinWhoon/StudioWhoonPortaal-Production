@@ -71,12 +71,15 @@ const ProjectAdminDashboard: React.FC = () => {
   const { t } = useTranslation();
   const [customers, setCustomers] = useState<User[]>([]);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
-  const [dossierTab, setDossierTab] = useState<'profile' | 'docs' | 'chat'>('profile');
+  const [dossierTab, setDossierTab] = useState<'profile' | 'docs' | 'chat' | 'financieel'>('profile');
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [customerDocs, setCustomerDocs] = useState<PortalDocument[]>([]);
   const [packages, setPackages] = useState<MasterPackage[]>([]);
+  const [payments, setPayments] = useState<any[]>([]);
+  const [newPayment, setNewPayment] = useState({ amount: '', note: '' });
+  const [isRegisteringPayment, setIsRegisteringPayment] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   // UI state for alerts/confirms
@@ -95,6 +98,7 @@ const ProjectAdminDashboard: React.FC = () => {
   // File upload state for admin
   const adminFileRef = useRef<HTMLInputElement>(null);
   const [isAdminUploading, setIsAdminUploading] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   const refreshData = async () => {
     if (activeProject) {
@@ -113,15 +117,30 @@ const ProjectAdminDashboard: React.FC = () => {
         setCustomerDocs(docs);
         const currentCust = projectCustomers.find(c => c.id === selectedCustomerId);
         if (currentCust) setLocalNotes(currentCust.remarks || '');
+        
+        const custPayments = await dataService.getPayments(activeProject.id, selectedCustomerId);
+        setPayments(custPayments);
       }
     }
   };
 
   useEffect(() => {
-    refreshData();
+    setIsInitialLoading(true);
+    refreshData().catch(console.error).finally(() => setIsInitialLoading(false));
   }, [activeProject, activeView, selectedCustomerId]);
 
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [selectedCustomerId, dossierTab, messages]);
+
+  if (isInitialLoading && !customers.length) {
+    return (
+      <div className="flex-1 flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-[#8C7864] border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-[#8C7864]">Aligning the blueprints for your future....</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -138,6 +157,48 @@ const ProjectAdminDashboard: React.FC = () => {
     } finally {
       setIsSending(false);
     }
+  };
+
+  const handleRegisterPayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedCustomerId || !activeProject || !newPayment.amount) return;
+    
+    setIsRegisteringPayment(true);
+    try {
+      await dataService.createPayment({
+        projectId: activeProject.id,
+        customerId: selectedCustomerId,
+        amount: Number(newPayment.amount),
+        note: newPayment.note
+      });
+      setNewPayment({ amount: '', note: '' });
+      await refreshData();
+      setFeedback({ title: "Succes", msg: "Betaling succesvol geregistreerd.", type: 'success' });
+    } catch (err) {
+      console.error("Error registering payment:", err);
+      setFeedback({ title: "Fout", msg: "Er is een fout opgetreden bij het registreren van de betaling.", type: 'error' });
+    } finally {
+      setIsRegisteringPayment(false);
+    }
+  };
+
+  const handleDeletePayment = async (paymentId: string) => {
+    setConfirmData({
+      title: "Betaling Verwijderen",
+      message: "Weet u zeker dat u deze betaling wilt verwijderen? Dit kan niet ongedaan worden gemaakt.",
+      isDestructive: true,
+      onConfirm: async () => {
+        setConfirmData(null);
+        try {
+          await dataService.deletePayment(paymentId);
+          await refreshData();
+          setFeedback({ title: "Verwijderd", msg: "Betaling is verwijderd.", type: 'success' });
+        } catch (err) {
+          console.error("Error deleting payment:", err);
+          setFeedback({ title: "Fout", msg: "Er is een fout opgetreden bij het verwijderen.", type: 'error' });
+        }
+      }
+    });
   };
 
   const handleSaveCustomer = async (e: React.FormEvent) => {
@@ -419,7 +480,8 @@ const ProjectAdminDashboard: React.FC = () => {
                      {[
                        {id:'profile', label: 'Dossier'}, 
                        {id:'docs', label: 'Documenten'}, 
-                       {id:'chat', label: 'Chat'}
+                       {id:'chat', label: 'Chat'},
+                       {id:'financieel', label: 'Financieel'}
                      ].map(t => (
                        <button 
                          key={t.id} 
@@ -594,6 +656,82 @@ const ProjectAdminDashboard: React.FC = () => {
                    </form>
                  </div>
                )}
+               {dossierTab === 'financieel' && (
+                 <div className="animate-in fade-in space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100">
+                        <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest block mb-2">Totale Kosten</span>
+                        <span className="text-2xl font-black text-slate-900 tracking-tighter">€{(selectedCust.agreedPackagePrice || 0).toLocaleString('nl-NL')}</span>
+                      </div>
+                      <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100">
+                        <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest block mb-2">Totaal Betaald</span>
+                        <span className="text-2xl font-black text-green-600 tracking-tighter">€{payments.reduce((sum, p) => sum + Number(p.amount), 0).toLocaleString('nl-NL')}</span>
+                      </div>
+                      <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100">
+                        <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest block mb-2">Openstaand</span>
+                        <span className="text-2xl font-black text-orange-500 tracking-tighter">€{((selectedCust.agreedPackagePrice || 0) - payments.reduce((sum, p) => sum + Number(p.amount), 0)).toLocaleString('nl-NL')}</span>
+                      </div>
+                    </div>
+
+                    <div className="bg-white border border-slate-100 rounded-[2rem] p-8 shadow-sm">
+                      <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-6">Nieuwe Betaling Registreren</h4>
+                      <form onSubmit={handleRegisterPayment} className="flex gap-4">
+                        <input 
+                          type="number" 
+                          required
+                          placeholder="Bedrag (€)" 
+                          className="w-48 p-4 bg-slate-50 border border-slate-100 rounded-xl outline-none text-sm font-bold" 
+                          value={newPayment.amount} 
+                          onChange={e=>setNewPayment({...newPayment, amount: e.target.value})} 
+                        />
+                        <input 
+                          type="text" 
+                          placeholder="Notitie (optioneel)" 
+                          className="flex-1 p-4 bg-slate-50 border border-slate-100 rounded-xl outline-none text-sm" 
+                          value={newPayment.note} 
+                          onChange={e=>setNewPayment({...newPayment, note: e.target.value})} 
+                        />
+                        <button 
+                          type="submit" 
+                          disabled={isRegisteringPayment || !newPayment.amount}
+                          className="px-8 bg-[#8C7864] text-white rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-[#7A6855] transition-all disabled:opacity-50"
+                        >
+                          {isRegisteringPayment ? '...' : 'Registreren'}
+                        </button>
+                      </form>
+                    </div>
+
+                    <div className="bg-slate-50 border border-slate-100 rounded-[2rem] overflow-hidden">
+                       <table className="w-full text-left">
+                          <thead className="bg-slate-100/50 border-b border-slate-200">
+                             <tr>
+                                <th className="p-6 text-[9px] font-black uppercase text-slate-400">Datum</th>
+                                <th className="p-6 text-[9px] font-black uppercase text-slate-400">Bedrag</th>
+                                <th className="p-6 text-[9px] font-black uppercase text-slate-400">Notitie</th>
+                                <th className="p-6 text-right"></th>
+                             </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                             {payments.map(p => (
+                               <tr key={p.id} className="hover:bg-white transition-colors">
+                                  <td className="p-6 text-xs font-bold text-slate-500">{new Date(p.date).toLocaleDateString('nl-NL')}</td>
+                                  <td className="p-6 text-sm font-black text-slate-900">€{Number(p.amount).toLocaleString('nl-NL')}</td>
+                                  <td className="p-6 text-xs text-slate-500">{p.note || '-'}</td>
+                                  <td className="p-6 text-right">
+                                     <button onClick={() => handleDeletePayment(p.id)} className="w-8 h-8 bg-red-50 text-red-500 rounded-lg flex items-center justify-center hover:bg-red-500 hover:text-white transition-all">🗑️</button>
+                                  </td>
+                               </tr>
+                             ))}
+                             {payments.length === 0 && (
+                               <tr>
+                                  <td colSpan={4} className="p-12 text-center text-[10px] font-black uppercase text-slate-300 italic">Geen betalingen gevonden</td>
+                               </tr>
+                             )}
+                          </tbody>
+                       </table>
+                    </div>
+                 </div>
+               )}
             </div>
           </>
         ) : (
@@ -618,7 +756,7 @@ const ProjectAdminDashboard: React.FC = () => {
                     <div className="bg-white p-6 rounded-2xl border-2 border-dashed border-green-200 text-2xl font-black text-slate-900 tracking-widest mb-10">
                        {generatedPass}
                     </div>
-                    <button onClick={() => { setIsEditModalOpen(false); setGeneratedPass(null); setFeedback({ title: "Gereed", type: 'success' }); }} className="w-full py-4 bg-green-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest">Klaar</button>
+                    <button onClick={() => { setIsEditModalOpen(false); setGeneratedPass(null); }} className="w-full py-4 bg-green-600 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest">Klaar</button>
                  </div>
               ) : (
                 <form onSubmit={handleSaveCustomer}>
@@ -641,10 +779,15 @@ const ProjectAdminDashboard: React.FC = () => {
                           <input placeholder="Kavelnummer" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none" value={editingCustomer?.plotNumber || ''} onChange={e=>setEditingCustomer({...editingCustomer, plotNumber: e.target.value})} />
                         </div>
                         <input placeholder="Appartement ID (Bijv. APT-101)" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none mb-3" value={editingCustomer?.apartmentId || ''} onChange={e=>setEditingCustomer({...editingCustomer, apartmentId: e.target.value})} />
-                        <select className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold" value={editingCustomer?.masterPackageId || ''} onChange={e=>setEditingCustomer({...editingCustomer, masterPackageId: e.target.value})}>
+                        <select className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold mb-3" value={editingCustomer?.masterPackageId || ''} onChange={e=>{
+                            const pkgId = e.target.value;
+                            const pkg = packages.find(p => p.id === pkgId);
+                            setEditingCustomer({...editingCustomer, masterPackageId: pkgId, agreedPackagePrice: pkg?.price || undefined});
+                        }}>
                             <option value="">Geen Pakket</option>
                             {packages.map(p => <option key={p.id} value={p.id}>{p.name.toUpperCase()}</option>)}
                         </select>
+                        <input type="number" placeholder="Afgesproken Prijs (€)" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none" value={editingCustomer?.agreedPackagePrice || ''} onChange={e=>setEditingCustomer({...editingCustomer, agreedPackagePrice: Number(e.target.value)})} />
                     </div>
                   </div>
                   <div className="flex gap-4 mt-12">

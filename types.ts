@@ -84,6 +84,7 @@ export interface User {
   remarks?: string;
   exceptions?: UserException[];
   masterPackageId?: string; 
+  agreedPackagePrice?: number;
   selectedOptionIds?: string[];
   createdAt?: string;
   apartmentDetails?: {
@@ -93,6 +94,16 @@ export interface User {
     deliveryDate: string;
   };
   constructionProgress?: ConstructionProgress;
+}
+
+export interface Payment {
+  id: string;
+  customerId: string;
+  projectId: string;
+  amount: number;
+  date: string;
+  note?: string;
+  registeredBy: string;
 }
 
 export interface PortalDocument {

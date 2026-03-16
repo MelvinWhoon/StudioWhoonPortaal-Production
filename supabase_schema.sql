@@ -68,6 +68,7 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS last_name TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS phone TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS case_number TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS plot_number TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS agreed_package_price NUMERIC;
 
 -- 4. MESSAGES TABLE
 CREATE TABLE IF NOT EXISTS messages (
@@ -113,6 +114,17 @@ CREATE TABLE IF NOT EXISTS user_logins (
     login_time TIMESTAMPTZ DEFAULT NOW(),
     ip_address TEXT,
     user_agent TEXT
+);
+
+-- 6.6 PAYMENTS TABLE
+CREATE TABLE IF NOT EXISTS payments (
+    id TEXT PRIMARY KEY,
+    customer_id TEXT REFERENCES users(id) ON DELETE CASCADE,
+    project_id TEXT REFERENCES projects(id) ON DELETE CASCADE,
+    amount NUMERIC NOT NULL,
+    date TIMESTAMPTZ DEFAULT NOW(),
+    note TEXT,
+    registered_by TEXT REFERENCES users(id) ON DELETE SET NULL
 );
 
 -- 7. AUTOMATIC NOTIFICATION TRIGGERS (For Speed)
@@ -162,6 +174,27 @@ DROP TRIGGER IF EXISTS tr_notify_on_document ON portal_documents;
 CREATE TRIGGER tr_notify_on_document
 AFTER INSERT ON portal_documents
 FOR EACH ROW EXECUTE FUNCTION notify_on_document();
+
+-- Trigger for Payments
+CREATE OR REPLACE FUNCTION notify_on_payment()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO notifications (id, user_id, text, date, is_read)
+    VALUES (
+        'n' || encode(gen_random_bytes(6), 'hex'),
+        NEW.customer_id,
+        'Betaling van €' || NEW.amount || ' geregistreerd op ' || to_char(NEW.date, 'DD-MM-YYYY'),
+        NOW(),
+        false
+    );
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS tr_notify_on_payment ON payments;
+CREATE TRIGGER tr_notify_on_payment
+AFTER INSERT ON payments
+FOR EACH ROW EXECUTE FUNCTION notify_on_payment();
 
 -- 8. INITIAL SUPER ADMIN
 INSERT INTO users (id, email, name, role, password, is_active, is_password_set)
