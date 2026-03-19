@@ -46,6 +46,7 @@ const Sidebar: React.FC = () => {
         { label: 'Dashboard', trans: t('dashboard'), icon: <Icons.Stats /> },
         { label: 'Project', trans: t('project'), icon: <Icons.Projects /> },
         { label: 'Klanten', trans: t('customers'), icon: <Icons.Users /> },
+        { label: 'Nieuwe Klant', trans: 'Nieuwe Klant', icon: <Icons.Users /> },
         { label: 'Berichten', trans: t('messages'), icon: <Icons.Inbox /> }
       ];
     }

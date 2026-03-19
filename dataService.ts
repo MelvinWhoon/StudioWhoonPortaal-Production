@@ -407,6 +407,14 @@ class DataService {
       }
       throw error;
     }
+
+    if (payment.customerId && payment.amount) {
+      await this.createNotification(
+        payment.customerId,
+        `Er is een nieuwe betaling van €${payment.amount.toLocaleString('nl-NL')} geregistreerd.`
+      );
+    }
+
     return { success: true };
   }
 

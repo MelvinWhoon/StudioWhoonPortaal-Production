@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useAuth, useTranslation } from '../App';
 import { dataService } from '../dataService';
 import { Project, MasterPackage, User, UserRole, ProjectStatus, Message, UserException } from '../types';
+import { exportToCsv } from '../downloadUtils';
 import DashboardStats from './DashboardStats';
 import CreateUserPage from './CreateUserPage';
 import { IMAGES } from '../constants';
@@ -80,6 +81,7 @@ const SuperAdminDashboard: React.FC = () => {
   // Filter states
   const [userSearch, setUserSearch] = useState('');
   const [userRoleFilter, setUserRoleFilter] = useState<string>('ALL');
+  const [userProjectFilter, setUserProjectFilter] = useState<string>('ALL');
   const [inboxTab, setInboxTab] = useState<'ESCALATED' | 'ALL'>('ESCALATED');
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState('');
@@ -160,9 +162,10 @@ const SuperAdminDashboard: React.FC = () => {
     return users.filter(u => {
       const matchesSearch = u.name.toLowerCase().includes(userSearch.toLowerCase()) || u.email.toLowerCase().includes(userSearch.toLowerCase());
       const matchesRole = userRoleFilter === 'ALL' || u.role === userRoleFilter;
-      return matchesSearch && matchesRole;
+      const matchesProject = userProjectFilter === 'ALL' || u.projectId === userProjectFilter;
+      return matchesSearch && matchesRole && matchesProject;
     });
-  }, [users, userSearch, userRoleFilter]);
+  }, [users, userSearch, userRoleFilter, userProjectFilter]);
 
   const uniqueCategories = useMemo(() => {
     const cats = new Set(masterPackages.map(p => p.category).filter(Boolean));
@@ -515,6 +518,28 @@ const SuperAdminDashboard: React.FC = () => {
                       <option value={UserRole.PROJECT_ADMIN}>PROJECT ADMIN</option>
                       <option value={UserRole.CUSTOMER}>KLANT</option>
                    </select>
+                   <select className="px-6 py-3 bg-white border border-slate-100 rounded-2xl text-[10px] font-black uppercase tracking-widest outline-none shadow-sm" value={userProjectFilter} onChange={e => setUserProjectFilter(e.target.value)}>
+                      <option value="ALL">ALLE PROJECTEN</option>
+                      {projects.map(p => <option key={p.id} value={p.id}>{p.name.toUpperCase()}</option>)}
+                   </select>
+                   <button onClick={() => {
+                     const exportData = filteredUsers.map(u => ({
+                       Naam: u.name,
+                       Email: u.email,
+                       Telefoon: u.phone || '',
+                       Rol: u.role,
+                       Project: projects.find(p => p.id === u.projectId)?.name || 'Geen',
+                       Dossiernummer: u.caseNumber || '',
+                       Kavelnummer: u.plotNumber || '',
+                       AppartementID: u.apartmentId || '',
+                       Pakket: masterPackages.find(p => p.id === u.masterPackageId)?.name || 'Geen',
+                       AfgesprokenPrijs: u.agreedPackagePrice || 0,
+                       Notities: u.remarks || ''
+                     }));
+                     exportToCsv(exportData, `gebruikers_export.csv`);
+                   }} className="w-12 h-12 bg-slate-100 text-slate-500 rounded-2xl flex items-center justify-center text-lg shadow-sm hover:bg-slate-200 transition-all" title="Exporteer naar CSV">
+                     📥
+                   </button>
                    <button onClick={() => { setEditingUserId(null); setNewUser({ role: UserRole.CUSTOMER, isActive: true }); setIsUserModalOpen(true); setGeneratedPass(null); }} className="px-6 py-3 bg-[#8C7864] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-[#8C7864]/20 active:scale-95 transition-all">Nieuwe Gebruiker</button>
                 </div>
              </div>

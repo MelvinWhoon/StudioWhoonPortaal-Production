@@ -1,30 +1,20 @@
-<section>
-  <h1>Portaal</h1>
-  <p>
-    Het Portaal is een centraal beheersysteem voor klanten, projecten en betalingen binnen Studio Whoon.
-    Het platform biedt verschillende dashboards per rol en maakt dagelijkse processen sneller, duidelijker en beter beheersbaar.
-  </p>
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+</div>
 
-  <h2>Wat bevat het portaal?</h2>
-  <ul>
-    <li>Klantbeheer met centrale klantinformatie</li>
-    <li>Projectoverzicht met statusbeheer</li>
-    <li>Betalingsregistratie per klant</li>
-    <li>Financieel dashboard voor alle rollen</li>
-    <li>Rolgebaseerde rechten en dashboards</li>
-    <li>Google Translate integratie voor gebruik in alle talen</li>
-  </ul>
+# Run and deploy your AI Studio app
 
-  <h2>Betalingen en dashboard</h2>
-  <p>
-    In de nieuwste update zijn betalingsmogelijkheden toegevoegd. Betalingen kunnen nu per klant worden geregistreerd
-    en zijn overzichtelijk terug te zien in een dashboard. Dit dashboard is beschikbaar voor alle rollen, zodat iedere
-    gebruiker snel inzicht heeft in de actuele financiële status.
-  </p>
+This contains everything you need to run your app locally.
 
-  <h2>Meertaligheid</h2>
-  <p>
-    Dankzij de geïntegreerde Google Translate functionaliteit kan het portaal in vrijwel alle talen worden gebruikt.
-    Dit maakt het systeem geschikt voor een brede doelgroep en zorgt voor extra gebruiksgemak bij internationale klanten.
-  </p>
-</section>
+View your app in AI Studio: https://ai.studio/apps/9cf91d7d-51fc-4719-b866-e042e58f0ac5
+
+## Run Locally
+
+**Prerequisites:**  Node.js
+
+
+1. Install dependencies:
+   `npm install`
+2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+3. Run the app:
+   `npm run dev`

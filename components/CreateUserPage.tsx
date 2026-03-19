@@ -13,7 +13,7 @@ const generateRandomPassword = () => {
 };
 
 const CreateUserPage: React.FC = () => {
-  const { user, setActiveView } = useAuth();
+  const { user, setActiveView, activeProject } = useAuth();
   const { t } = useTranslation();
   
   const [projects, setProjects] = useState<Project[]>([]);
@@ -29,7 +29,7 @@ const CreateUserPage: React.FC = () => {
     email: '',
     phone: '',
     role: UserRole.CUSTOMER,
-    project_id: '',
+    project_id: user?.role === UserRole.PROJECT_ADMIN ? (user.projectId || activeProject?.id || projects[0]?.id || '') : '',
     master_package_id: '',
     agreed_package_price: '',
     case_number: '',
@@ -37,6 +37,15 @@ const CreateUserPage: React.FC = () => {
   });
 
   const printRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (user?.role === UserRole.PROJECT_ADMIN) {
+      const targetProjectId = user.projectId || activeProject?.id || projects[0]?.id;
+      if (targetProjectId && formData.project_id !== targetProjectId) {
+        setFormData(prev => ({ ...prev, project_id: targetProjectId }));
+      }
+    }
+  }, [user, activeProject, projects, formData.project_id]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -47,12 +56,20 @@ const CreateUserPage: React.FC = () => {
         ]);
         setProjects(p);
         setMasterPackages(mp);
+        
+        // If user is project admin, ensure their project is set even if it wasn't in the initial state
+        if (user?.role === UserRole.PROJECT_ADMIN) {
+          const targetProjectId = user.projectId || activeProject?.id || p[0]?.id;
+          if (targetProjectId) {
+             setFormData(prev => ({ ...prev, project_id: targetProjectId }));
+          }
+        }
       } catch (error) {
         console.error("Error loading data:", error);
       }
     };
     fetchData();
-  }, []);
+  }, [user, activeProject]);
 
   // Filter packages based on selected project
   const availablePackages = masterPackages.filter(p => p.projectId === formData.project_id);
@@ -159,8 +176,9 @@ const CreateUserPage: React.FC = () => {
       email: '',
       phone: '',
       role: UserRole.CUSTOMER,
-      project_id: '',
+      project_id: user?.role === UserRole.PROJECT_ADMIN ? (user.projectId || activeProject?.id || projects[0]?.id || '') : '',
       master_package_id: '',
+      agreed_package_price: '',
       case_number: '',
       plot_number: ''
     });
@@ -169,9 +187,11 @@ const CreateUserPage: React.FC = () => {
     setCreatedUserEmail('');
   };
 
-  if (user?.role !== UserRole.SUPER_ADMIN) {
+  if (user?.role !== UserRole.SUPER_ADMIN && user?.role !== UserRole.PROJECT_ADMIN) {
     return <div className="p-8 text-center text-slate-500">Geen toegang.</div>;
   }
+
+  const isProjectAdmin = user?.role === UserRole.PROJECT_ADMIN;
 
   if (isSuccess) {
     const selectedProject = projects.find(p => p.id === formData.project_id);
@@ -262,7 +282,7 @@ const CreateUserPage: React.FC = () => {
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-300">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Nieuwe Klant Aanmaken</h1>
-        <button onClick={() => setActiveView('Gebruikers')} className="px-6 py-3 bg-slate-100 text-slate-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all">
+        <button onClick={() => setActiveView(isProjectAdmin ? 'Klanten' : 'Gebruikers')} className="px-6 py-3 bg-slate-100 text-slate-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all">
           Annuleren
         </button>
       </div>
@@ -295,51 +315,58 @@ const CreateUserPage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
              <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Rol *</label>
-                <select required name="role" value={formData.role} onChange={handleChange} className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm outline-none focus:ring-4 focus:ring-[#8C7864]/10 transition-all">
+                <select required name="role" value={formData.role} onChange={handleChange} disabled={isProjectAdmin} className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm outline-none focus:ring-4 focus:ring-[#8C7864]/10 transition-all disabled:opacity-50">
                    <option value={UserRole.CUSTOMER}>Klant</option>
-                   <option value={UserRole.PROJECT_ADMIN}>Project Admin</option>
-                   <option value={UserRole.SUPER_ADMIN}>Super Admin</option>
+                   {!isProjectAdmin && <option value={UserRole.PROJECT_ADMIN}>Project Admin</option>}
+                   {!isProjectAdmin && <option value={UserRole.SUPER_ADMIN}>Super Admin</option>}
                 </select>
              </div>
-             <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Project</label>
-                <select name="project_id" value={formData.project_id} onChange={handleChange} className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm outline-none focus:ring-4 focus:ring-[#8C7864]/10 transition-all">
-                   <option value="">Geen project geselecteerd</option>
-                   {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                </select>
-             </div>
+             {!isProjectAdmin && (
+               <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Project {formData.role !== UserRole.SUPER_ADMIN ? '*' : ''}</label>
+                  <select required={formData.role !== UserRole.SUPER_ADMIN} name="project_id" value={formData.project_id} onChange={handleChange} className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm outline-none focus:ring-4 focus:ring-[#8C7864]/10 transition-all disabled:opacity-50">
+                     <option value="">Geen project geselecteerd</option>
+                     {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  </select>
+               </div>
+             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-             <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pakket</label>
-                <select 
-                  name="master_package_id" 
-                  value={formData.master_package_id} 
-                  onChange={handleChange} 
-                  disabled={!formData.project_id || availablePackages.length === 0}
-                  className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm outline-none focus:ring-4 focus:ring-[#8C7864]/10 transition-all disabled:opacity-50"
-                >
-                   <option value="">{formData.project_id ? (availablePackages.length > 0 ? 'Selecteer een pakket' : 'Geen pakketten voor dit project') : 'Selecteer eerst een project'}</option>
-                   {availablePackages.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                </select>
-             </div>
-             <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Afgesproken Prijs (€)</label>
-                <input type="number" name="agreed_package_price" value={formData.agreed_package_price} onChange={handleChange} className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm outline-none focus:ring-4 focus:ring-[#8C7864]/10 transition-all" placeholder="Bijv. 15000" />
-             </div>
-          </div>
+          {formData.role === UserRole.CUSTOMER && (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                 <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pakket *</label>
+                    <select 
+                      required
+                      name="master_package_id" 
+                      value={formData.master_package_id} 
+                      onChange={handleChange} 
+                      disabled={!formData.project_id || availablePackages.length === 0}
+                      className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm outline-none focus:ring-4 focus:ring-[#8C7864]/10 transition-all disabled:opacity-50"
+                    >
+                       <option value="">{formData.project_id ? (availablePackages.length > 0 ? 'Selecteer een pakket' : 'Geen pakketten voor dit project') : 'Selecteer eerst een project'}</option>
+                       {availablePackages.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                    </select>
+                 </div>
+                 <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Afgesproken Prijs (€)</label>
+                    <input type="number" name="agreed_package_price" value={formData.agreed_package_price} onChange={handleChange} className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm outline-none focus:ring-4 focus:ring-[#8C7864]/10 transition-all" placeholder="Bijv. 15000" />
+                 </div>
+              </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-             <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Bouwnummer / Plot</label>
-                <input type="text" name="plot_number" value={formData.plot_number} onChange={handleChange} className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm outline-none focus:ring-4 focus:ring-[#8C7864]/10 transition-all" placeholder="Bijv. BNR 12" />
-             </div>
-             <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Dossiernummer</label>
-                <input type="text" name="case_number" value={formData.case_number} onChange={handleChange} className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm outline-none focus:ring-4 focus:ring-[#8C7864]/10 transition-all" placeholder="Bijv. DOS-2026-001" />
-             </div>
-          </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                 <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Bouwnummer / Plot</label>
+                    <input type="text" name="plot_number" value={formData.plot_number} onChange={handleChange} className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm outline-none focus:ring-4 focus:ring-[#8C7864]/10 transition-all" placeholder="Bijv. BNR 12" />
+                 </div>
+                 <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Dossiernummer</label>
+                    <input type="text" name="case_number" value={formData.case_number} onChange={handleChange} className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm outline-none focus:ring-4 focus:ring-[#8C7864]/10 transition-all" placeholder="Bijv. DOS-2026-001" />
+                 </div>
+              </div>
+            </>
+          )}
 
           <div className="pt-8 border-t border-slate-50 flex justify-end">
              <button 

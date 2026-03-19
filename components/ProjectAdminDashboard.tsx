@@ -3,8 +3,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth, useTranslation } from '../App';
 import { dataService } from '../dataService';
 import { User, UserRole, MasterPackage, Message, Project, ProjectStatus, PortalDocument } from '../types';
-import { downloadFile } from '../downloadUtils';
+import { downloadFile, exportToCsv } from '../downloadUtils';
 import DashboardStats from './DashboardStats';
+import CreateUserPage from './CreateUserPage';
 
 const generateRandomPassword = () => {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
@@ -392,6 +393,10 @@ const ProjectAdminDashboard: React.FC = () => {
   }
 
   // All Messages View Logic
+  if (activeView === 'Nieuwe Klant') {
+    return <CreateUserPage />;
+  }
+
   if (activeView === 'Berichten') {
     return (
       <div className="space-y-8 animate-in fade-in h-[calc(100vh-160px)] flex flex-col">
@@ -444,7 +449,25 @@ const ProjectAdminDashboard: React.FC = () => {
       <div className="w-full lg:w-80 bg-white/90 backdrop-blur-md rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col overflow-hidden">
         <div className="p-6 border-b border-slate-50 flex justify-between items-center">
           <h3 className="text-[10px] font-black uppercase text-slate-300 tracking-widest">Project Klanten</h3>
-          <button onClick={() => { setEditingCustomer({}); setIsEditModalOpen(true); setGeneratedPass(null); }} className="w-8 h-8 bg-[#8C7864] text-white rounded-xl flex items-center justify-center text-sm shadow-lg shadow-[#8C7864]/20">+</button>
+          <div className="flex gap-2">
+            <button onClick={() => {
+              const exportData = customers.map(c => ({
+                Naam: c.name,
+                Email: c.email,
+                Telefoon: c.phone || '',
+                Dossiernummer: c.caseNumber || '',
+                Kavelnummer: c.plotNumber || '',
+                AppartementID: c.apartmentId || '',
+                Pakket: packages.find(p => p.id === c.masterPackageId)?.name || 'Geen',
+                AfgesprokenPrijs: c.agreedPackagePrice || 0,
+                Notities: c.remarks || ''
+              }));
+              exportToCsv(exportData, `klanten_${activeProject?.name || 'project'}.csv`);
+            }} className="w-8 h-8 bg-slate-100 text-slate-500 rounded-xl flex items-center justify-center text-sm shadow-sm hover:bg-slate-200 transition-all" title="Exporteer naar CSV">
+              📥
+            </button>
+            <button onClick={() => setActiveView('Nieuwe Klant')} className="w-8 h-8 bg-[#8C7864] text-white rounded-xl flex items-center justify-center text-sm shadow-lg shadow-[#8C7864]/20">+</button>
+          </div>
         </div>
         <div className="flex-1 overflow-y-auto p-3 space-y-1 custom-scrollbar">
           {customers.map(c => (
