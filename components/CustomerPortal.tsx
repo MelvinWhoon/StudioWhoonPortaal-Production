@@ -143,63 +143,63 @@ const CustomerPortal: React.FC = () => {
     const totalCosts = user?.agreedPackagePrice || 0;
     const totalPaid = payments.reduce((sum, p) => sum + Number(p.amount), 0);
     const outstanding = totalCosts - totalPaid;
-    
+
     return (
-      <div className="space-y-12 animate-in fade-in">
-        <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">Financieel Overzicht</h1>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
-            <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest block mb-4">Totale Kosten</span>
+      <div className="space-y-6 animate-in fade-in">
+        <h1 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Financieel Overzicht</h1>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white p-5 sm:p-6 rounded-[1.5rem] border border-slate-100 shadow-sm">
+            <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest block mb-2">Totale Kosten</span>
             <div className="flex items-end justify-between">
-              <span className="text-3xl font-black text-slate-900 tracking-tighter">€{totalCosts.toLocaleString('nl-NL')}</span>
-              <span className="text-2xl opacity-20">💰</span>
+              <span className="text-2xl font-black text-slate-900 tracking-tighter">€{totalCosts.toLocaleString('nl-NL')}</span>
+              <span className="text-xl opacity-20">💰</span>
             </div>
           </div>
-          <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
-            <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest block mb-4">Totaal Betaald</span>
+          <div className="bg-white p-5 sm:p-6 rounded-[1.5rem] border border-slate-100 shadow-sm">
+            <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest block mb-2">Totaal Betaald</span>
             <div className="flex items-end justify-between">
-              <span className="text-3xl font-black text-green-600 tracking-tighter">€{totalPaid.toLocaleString('nl-NL')}</span>
-              <span className="text-2xl opacity-20">✅</span>
+              <span className="text-2xl font-black text-green-600 tracking-tighter">€{totalPaid.toLocaleString('nl-NL')}</span>
+              <span className="text-xl opacity-20">✅</span>
             </div>
           </div>
-          <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
-            <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest block mb-4">Openstaand Bedrag</span>
+          <div className="bg-white p-5 sm:p-6 rounded-[1.5rem] border border-slate-100 shadow-sm">
+            <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest block mb-2">Openstaand Bedrag</span>
             <div className="flex items-end justify-between">
-              <span className="text-3xl font-black text-orange-500 tracking-tighter">€{outstanding.toLocaleString('nl-NL')}</span>
-              <span className="text-2xl opacity-20">⏳</span>
+              <span className="text-2xl font-black text-orange-500 tracking-tighter">€{outstanding.toLocaleString('nl-NL')}</span>
+              <span className="text-xl opacity-20">⏳</span>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-          <div className="p-6 sm:p-8 border-b border-slate-50">
-            <h2 className="text-sm font-black uppercase tracking-widest text-slate-900">Betalingshistorie</h2>
+        <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-50">
+            <h2 className="text-xs font-black uppercase tracking-widest text-slate-900">Betalingshistorie</h2>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left min-w-[440px]">
               <thead className="bg-slate-50/50">
                 <tr>
-                  <th className="px-6 py-4 sm:p-8 text-[10px] font-black uppercase text-slate-400">Datum</th>
-                  <th className="px-6 py-4 sm:p-8 text-[10px] font-black uppercase text-slate-400">Bedrag</th>
-                  <th className="px-6 py-4 sm:p-8 text-[10px] font-black uppercase text-slate-400">Notitie</th>
-                  <th className="px-6 py-4 sm:p-8 text-[10px] font-black uppercase text-slate-400">Status</th>
+                  <th className="px-6 py-3 text-[10px] font-black uppercase text-slate-400">Datum</th>
+                  <th className="px-6 py-3 text-[10px] font-black uppercase text-slate-400">Bedrag</th>
+                  <th className="px-6 py-3 text-[10px] font-black uppercase text-slate-400">Notitie</th>
+                  <th className="px-6 py-3 text-[10px] font-black uppercase text-slate-400">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {payments.map(p => (
                   <tr key={p.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4 sm:p-8 text-xs text-slate-500 font-bold">{new Date(p.date).toLocaleDateString('nl-NL')}</td>
-                    <td className="px-6 py-4 sm:p-8 text-sm font-black text-slate-900 tracking-tight">€{Number(p.amount).toLocaleString('nl-NL')}</td>
-                    <td className="px-6 py-4 sm:p-8 text-xs text-slate-500">{p.note || '-'}</td>
-                    <td className="px-6 py-4 sm:p-8">
+                    <td className="px-6 py-4 text-xs text-slate-500 font-bold">{new Date(p.date).toLocaleDateString('nl-NL')}</td>
+                    <td className="px-6 py-4 text-sm font-black text-slate-900 tracking-tight">€{Number(p.amount).toLocaleString('nl-NL')}</td>
+                    <td className="px-6 py-4 text-xs text-slate-500">{p.note || '-'}</td>
+                    <td className="px-6 py-4">
                       <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-[10px] font-black uppercase tracking-widest">Betaald</span>
                     </td>
                   </tr>
                 ))}
                 {payments.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="p-16 sm:p-24 text-center text-[10px] font-black uppercase text-slate-300 italic">Geen betalingen gevonden</td>
+                    <td colSpan={4} className="py-16 text-center text-[10px] font-black uppercase text-slate-300 italic">Geen betalingen gevonden</td>
                   </tr>
                 )}
               </tbody>
@@ -212,20 +212,20 @@ const CustomerPortal: React.FC = () => {
 
   if (activeView === 'Berichten') {
     return (
-      <div className="flex flex-col lg:flex-row gap-8 h-auto lg:h-[calc(100vh-160px)] animate-in fade-in">
-        <div className="flex-1 min-h-[400px] bg-white rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col overflow-hidden">
-          <div className="p-8 border-b border-slate-50 flex items-center justify-between">
-            <h2 className="text-sm font-black uppercase tracking-widest text-slate-900">Project Chat</h2>
+      <div className="flex flex-col lg:flex-row gap-5 h-auto lg:h-[calc(100vh-120px)] animate-in fade-in">
+        <div className="flex-1 min-h-[380px] bg-white rounded-[2rem] border border-slate-100 shadow-sm flex flex-col overflow-hidden">
+          <div className="px-5 py-4 border-b border-slate-50 flex items-center justify-between">
+            <h2 className="text-xs font-black uppercase tracking-widest text-slate-900">Project Chat</h2>
             {isTranslating && <span className="text-[8px] font-black text-[#8C7864] animate-pulse">Vertaald door AI...</span>}
           </div>
-          <div className="flex-1 overflow-y-auto p-8 space-y-6 custom-scrollbar bg-slate-50/20">
+          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4 custom-scrollbar bg-slate-50/20">
             {messages.map(m => {
               const isMe = m.senderId === user?.id;
               const text = translatedMessages[m.id] || m.text;
               return (
                 <div key={m.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[70%] p-4 rounded-2xl shadow-sm ${isMe ? 'bg-[#8C7864] text-white rounded-br-none' : 'bg-white text-slate-800 border border-slate-100 rounded-bl-none'}`}>
-                    <p className="text-sm">{text}</p>
+                  <div className={`max-w-[70%] px-4 py-3 rounded-2xl shadow-sm ${isMe ? 'bg-[#8C7864] text-white rounded-br-none' : 'bg-white text-slate-800 border border-slate-100 rounded-bl-none'}`}>
+                    <p className="text-sm leading-snug">{text}</p>
                     <span className="text-[8px] block mt-1 opacity-60 uppercase">{new Date(m.date).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
                   </div>
                 </div>
@@ -233,36 +233,36 @@ const CustomerPortal: React.FC = () => {
             })}
             <div ref={msgEndRef} />
           </div>
-          <form onSubmit={handleSendMessage} className="p-8 border-t border-slate-50 bg-white flex gap-4">
-            <input 
-              className="flex-1 p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none" 
-              placeholder={t('type_message')} 
-              value={newMessage} 
+          <form onSubmit={handleSendMessage} className="px-5 py-4 border-t border-slate-50 bg-white flex gap-3">
+            <input
+              className="flex-1 px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl outline-none text-sm"
+              placeholder={t('type_message')}
+              value={newMessage}
               onChange={e=>setNewMessage(e.target.value)}
               disabled={isSending}
             />
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={isSending || !newMessage.trim()}
-              className={`px-10 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl transition-all active:scale-95 ${
-                isSending || !newMessage.trim() 
-                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' 
-                  : 'bg-[#8C7864] text-white shadow-[#8C7864]/20'
+              className={`px-8 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all active:scale-95 ${
+                isSending || !newMessage.trim()
+                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                  : 'bg-[#8C7864] text-white shadow-lg shadow-[#8C7864]/20'
               }`}
             >
               {isSending ? '...' : 'Verzend'}
             </button>
           </form>
         </div>
-        <div className="w-full lg:w-80 bg-white rounded-[2.5rem] border border-slate-100 p-8 shrink-0">
-           <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-8 border-b border-slate-50 pb-4">Meldingen</h3>
-           <div className="space-y-4 max-h-48 lg:max-h-none lg:h-[calc(100%-64px)] overflow-y-auto custom-scrollbar">
+        <div className="w-full lg:w-64 bg-white rounded-[2rem] border border-slate-100 p-5 shrink-0">
+           <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 border-b border-slate-50 pb-3">Meldingen</h3>
+           <div className="space-y-3 max-h-48 lg:max-h-none lg:h-[calc(100%-52px)] overflow-y-auto custom-scrollbar">
               {notifications.map(n => (
-                <div key={n.id} className={`p-4 rounded-2xl border ${n.isRead ? 'bg-white border-slate-50 opacity-50' : 'bg-[#8C7864]/5 border-[#8C7864]/10'}`}>
-                  <p className="text-[11px] font-bold text-slate-700">{n.text}</p>
+                <div key={n.id} className={`px-4 py-3 rounded-xl border ${n.isRead ? 'bg-white border-slate-50 opacity-50' : 'bg-[#8C7864]/5 border-[#8C7864]/10'}`}>
+                  <p className="text-[11px] font-bold text-slate-700 leading-snug">{n.text}</p>
                 </div>
               ))}
-              {notifications.length === 0 && <div className="text-center text-[10px] font-black uppercase text-slate-300 py-10 italic">Geen nieuwe meldingen</div>}
+              {notifications.length === 0 && <div className="text-center text-[10px] font-black uppercase text-slate-300 py-8 italic">Geen nieuwe meldingen</div>}
            </div>
         </div>
       </div>
@@ -271,55 +271,55 @@ const CustomerPortal: React.FC = () => {
 
   if (activeView === 'Documenten') {
     return (
-      <div className="space-y-12 animate-in fade-in">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+      <div className="space-y-6 animate-in fade-in">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">Documenten</h1>
-            <p className="text-xs text-slate-400 font-bold uppercase mt-2 tracking-widest">Beheer uw bestanden en uploads</p>
+            <h1 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Documenten</h1>
+            <p className="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-widest">Beheer uw bestanden en uploads</p>
           </div>
-          <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col gap-4 w-full md:w-auto">
-            <input 
-              type="text" 
-              placeholder="Naam van bestand (optioneel)" 
-              className="px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl text-xs outline-none focus:border-[#8C7864] transition-all"
+          <div className="bg-white px-4 py-4 rounded-[1.5rem] border border-slate-100 shadow-sm flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+            <input
+              type="text"
+              placeholder="Naam van bestand (optioneel)"
+              className="px-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl text-xs outline-none focus:border-[#8C7864] transition-all flex-1"
               value={uploadFileName}
               onChange={e => setUploadFileName(e.target.value)}
             />
-            <button 
+            <button
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
-              className="px-8 py-4 bg-[#8C7864] text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-[#8C7864]/20 active:scale-95 transition-all"
+              className="px-6 py-2.5 bg-[#8C7864] text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-[#8C7864]/20 active:scale-95 transition-all whitespace-nowrap"
             >
-              {isUploading ? 'Bezig met uploaden...' : 'Bestand Selecteren & Uploaden'}
+              {isUploading ? 'Uploaden...' : 'Uploaden'}
             </button>
             <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileUpload} />
           </div>
         </div>
-        <div className="bg-white rounded-[2.5rem] border border-slate-100 overflow-hidden">
+        <div className="bg-white rounded-[2rem] border border-slate-100 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left min-w-[440px]">
               <thead className="bg-slate-50/50">
                 <tr>
-                  <th className="px-6 py-4 sm:p-8 text-[10px] font-black uppercase text-slate-400">Bestand</th>
-                  <th className="px-6 py-4 sm:p-8 text-[10px] font-black uppercase text-slate-400">Datum</th>
-                  <th className="px-6 py-4 sm:p-8 text-[10px] font-black uppercase text-slate-400">Grootte</th>
-                  <th className="px-6 py-4 sm:p-8 text-right"></th>
+                  <th className="px-6 py-3 text-[10px] font-black uppercase text-slate-400">Bestand</th>
+                  <th className="px-6 py-3 text-[10px] font-black uppercase text-slate-400">Datum</th>
+                  <th className="px-6 py-3 text-[10px] font-black uppercase text-slate-400">Grootte</th>
+                  <th className="px-6 py-3 text-right"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {docs.map(doc => (
                   <tr key={doc.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4 sm:p-8">
+                    <td className="px-6 py-4">
                       <div className="text-sm font-black text-slate-900 uppercase tracking-tight">{doc.fileName}</div>
-                      <div className="text-[9px] text-slate-400 uppercase font-bold">Door: {doc.uploadedBy}</div>
+                      <div className="text-[9px] text-slate-400 uppercase font-bold mt-0.5">Door: {doc.uploadedBy}</div>
                     </td>
-                    <td className="px-6 py-4 sm:p-8 text-xs text-slate-500 font-bold">{doc.date}</td>
-                    <td className="px-6 py-4 sm:p-8 text-xs text-slate-500 font-bold">{doc.size}</td>
-                    <td className="px-6 py-4 sm:p-8 text-right">
+                    <td className="px-6 py-4 text-xs text-slate-500 font-bold">{doc.date}</td>
+                    <td className="px-6 py-4 text-xs text-slate-500 font-bold">{doc.size}</td>
+                    <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2">
-                         <button onClick={() => downloadFile(doc.externalUrl || '', doc.fileName)} className="w-10 h-10 bg-slate-900 text-white rounded-xl shadow-lg hover:bg-[#8C7864] transition-all flex items-center justify-center">📥</button>
+                         <button onClick={() => downloadFile(doc.externalUrl || '', doc.fileName)} className="w-9 h-9 bg-slate-900 text-white rounded-xl hover:bg-[#8C7864] transition-all flex items-center justify-center text-sm">📥</button>
                          {doc.uploadedBy === user?.name && (
-                           <button onClick={() => dataService.deleteDocument(doc.id).then(refreshDocs)} className="w-10 h-10 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all flex items-center justify-center">🗑️</button>
+                           <button onClick={() => dataService.deleteDocument(doc.id).then(refreshDocs)} className="w-9 h-9 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all flex items-center justify-center text-sm">🗑️</button>
                          )}
                       </div>
                     </td>
@@ -327,7 +327,7 @@ const CustomerPortal: React.FC = () => {
                 ))}
                 {docs.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="p-16 sm:p-24 text-center text-[10px] font-black uppercase text-slate-300 italic">Nog geen documenten aanwezig in uw dossier</td>
+                    <td colSpan={4} className="py-16 text-center text-[10px] font-black uppercase text-slate-300 italic">Nog geen documenten aanwezig in uw dossier</td>
                   </tr>
                 )}
               </tbody>
@@ -340,39 +340,39 @@ const CustomerPortal: React.FC = () => {
 
   if (activeView === 'Mijn Pakket') {
     return (
-      <div className="space-y-12 animate-in fade-in">
-        <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">Mijn Geselecteerde Pakket</h1>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          <div className="space-y-8">
-            <h3 className="text-sm font-black uppercase text-slate-400 tracking-widest">Alle Pakket-afbeeldingen</h3>
-            <div className="grid grid-cols-1 gap-8">
+      <div className="space-y-6 animate-in fade-in">
+        <h1 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Mijn Geselecteerde Pakket</h1>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="space-y-5">
+            <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Alle Pakket-afbeeldingen</h3>
+            <div className="grid grid-cols-1 gap-5">
               {(currentPackage?.photos || []).map((photo, i) => (
-                <div key={i} className="relative rounded-[2.5rem] overflow-hidden bg-slate-100 aspect-video border border-slate-100 shadow-xl">
+                <div key={i} className="relative rounded-[1.5rem] overflow-hidden bg-slate-100 aspect-video border border-slate-100 shadow-sm">
                   <img src={photo} className="w-full h-full object-cover" alt={`Package view ${i}`} />
                 </div>
               ))}
               {(currentPackage?.photos || []).length === 0 && (
-                <div className="bg-white rounded-[2rem] border border-slate-100 p-20 text-center opacity-20 italic uppercase font-black text-xs">Geen foto's beschikbaar</div>
+                <div className="bg-white rounded-[1.5rem] border border-slate-100 p-14 text-center opacity-20 italic uppercase font-black text-xs">Geen foto's beschikbaar</div>
               )}
             </div>
           </div>
-          <div className="bg-white p-6 sm:p-12 rounded-[2.5rem] border border-slate-100 shadow-sm text-slate-900 h-fit sticky top-8">
-             <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tighter mb-4">{currentPackage?.name || 'Pakket laden...'}</h2>
-             <div className="space-y-8 mt-10 sm:mt-12">
+          <div className="bg-white p-6 sm:p-8 rounded-[2rem] border border-slate-100 shadow-sm text-slate-900 h-fit sticky top-6">
+             <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tighter mb-1">{currentPackage?.name || 'Pakket laden...'}</h2>
+             <div className="space-y-6 mt-6">
                 <div>
-                   <h3 className="text-sm font-black uppercase text-slate-400 border-b border-slate-50 pb-4 tracking-widest mb-6">Inbegrepen Inhoud</h3>
-                   <ul className="space-y-5">
+                   <h3 className="text-[10px] font-black uppercase text-slate-400 border-b border-slate-50 pb-3 tracking-widest mb-4">Inbegrepen Inhoud</h3>
+                   <ul className="space-y-3">
                       {currentPackage?.inclusions?.map((inc, i) => (
-                        <li key={i} className="flex items-center gap-4 text-sm font-bold text-slate-700">
-                           <span className="w-2 h-2 bg-[#8C7864] rounded-full shrink-0 shadow-sm" />
+                        <li key={i} className="flex items-center gap-3 text-sm font-bold text-slate-700">
+                           <span className="w-1.5 h-1.5 bg-[#8C7864] rounded-full shrink-0" />
                            {inc}
                         </li>
                       ))}
                    </ul>
                 </div>
                 {currentPackage?.description && (
-                  <div className="pt-8 border-t border-slate-50">
-                    <h3 className="text-sm font-black uppercase text-slate-400 tracking-widest mb-4">Pakketomschrijving</h3>
+                  <div className="pt-5 border-t border-slate-50">
+                    <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-3">Pakketomschrijving</h3>
                     <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">{currentPackage.description}</p>
                   </div>
                 )}
@@ -384,63 +384,63 @@ const CustomerPortal: React.FC = () => {
   }
 
   return (
-    <div className="space-y-12 animate-in fade-in duration-700">
-      <div className="flex flex-col md:flex-row justify-between items-start gap-4">
+    <div className="space-y-6 animate-in fade-in duration-700">
+      <div className="flex flex-col md:flex-row justify-between items-start gap-3">
         <div>
-           <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase leading-none">Welkom, {user?.name}</h1>
-           <p className="text-xs text-[#8C7864] font-bold uppercase mt-3 tracking-widest">Uw persoonlijk dossier voor {activeProject?.name}</p>
+           <h1 className="text-2xl font-black text-slate-900 tracking-tighter uppercase leading-none">Welkom, {user?.name}</h1>
+           <p className="text-[10px] text-[#8C7864] font-bold uppercase mt-2 tracking-widest">Uw persoonlijk dossier voor {activeProject?.name}</p>
         </div>
-        <div className="bg-white px-8 py-4 rounded-[1.5rem] border border-slate-100 shadow-sm flex items-center gap-4">
-           <div className="w-10 h-10 bg-[#8C7864]/10 rounded-xl flex items-center justify-center text-xl">📄</div>
+        <div className="bg-white px-4 py-2.5 rounded-[1rem] border border-slate-100 shadow-sm flex items-center gap-3">
+           <div className="w-7 h-7 bg-[#8C7864]/10 rounded-lg flex items-center justify-center text-base">📄</div>
            <div>
-              <span className="text-[9px] font-black text-slate-400 uppercase block leading-none mb-1">Dossier Nummer</span>
-              <span className="text-sm font-black text-slate-900">{user?.apartmentId || 'N.v.t.'}</span>
+              <span className="text-[8px] font-black text-slate-400 uppercase block leading-none mb-0.5">Dossier Nummer</span>
+              <span className="text-xs font-black text-slate-900">{user?.apartmentId || 'N.v.t.'}</span>
            </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-12">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Apartment Card */}
-        <div className="bg-white rounded-[3rem] border border-slate-100 overflow-hidden group hover:shadow-2xl transition-all duration-500">
-          <div className="p-6 sm:p-12">
-             <div className="h-60 sm:h-72 rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden mb-8 sm:mb-12 shadow-2xl relative">
+        <div className="bg-white rounded-[2rem] border border-slate-100 overflow-hidden group hover:shadow-xl transition-all duration-500">
+          <div className="p-5 sm:p-7">
+             <div className="h-48 sm:h-56 rounded-[1.5rem] overflow-hidden mb-5 shadow-lg relative">
                 <img src={activeProject?.additionalPhotos?.[0]} className="w-full h-full object-cover group-hover:scale-105 transition-all duration-1000" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                <h3 className="absolute bottom-10 left-10 text-2xl font-black text-white uppercase tracking-tighter">Uw Nieuwe Thuis</h3>
+                <h3 className="absolute bottom-4 left-5 text-base font-black text-white uppercase tracking-tighter">Uw Nieuwe Thuis</h3>
              </div>
-             
-             <div className="space-y-8">
-                <div className="grid grid-cols-2 gap-10">
+
+             <div className="space-y-5">
+                <div className="grid grid-cols-2 gap-5">
                    <div>
-                      <span className="text-[10px] font-black text-slate-400 uppercase block mb-2 tracking-widest">Bouwvoortgang</span>
-                      <div className="text-4xl font-black text-slate-900 tracking-tighter">{user?.constructionProgress?.total || 0}%</div>
-                      <div className="mt-3 h-1.5 w-full bg-slate-50 rounded-full overflow-hidden">
+                      <span className="text-[9px] font-black text-slate-400 uppercase block mb-1 tracking-widest">Bouwvoortgang</span>
+                      <div className="text-2xl font-black text-slate-900 tracking-tighter">{user?.constructionProgress?.total || 0}%</div>
+                      <div className="mt-2 h-1 w-full bg-slate-100 rounded-full overflow-hidden">
                         <div className="h-full bg-[#8C7864] transition-all duration-1000" style={{ width: `${user?.constructionProgress?.total || 0}%` }} />
                       </div>
                    </div>
                    <div>
-                      <span className="text-[10px] font-black text-slate-400 uppercase block mb-2 tracking-widest">Verwachte Oplevering</span>
-                      <div className="text-4xl font-black text-slate-900 tracking-tighter">{user?.apartmentDetails?.deliveryDate || 'T.b.a.'}</div>
-                      <div className="mt-3 text-[10px] font-black text-[#8C7864] uppercase">{activeProject?.status}</div>
+                      <span className="text-[9px] font-black text-slate-400 uppercase block mb-1 tracking-widest">Verwachte Oplevering</span>
+                      <div className="text-2xl font-black text-slate-900 tracking-tighter">{user?.apartmentDetails?.deliveryDate || 'T.b.a.'}</div>
+                      <div className="mt-2 text-[9px] font-black text-[#8C7864] uppercase">{activeProject?.status}</div>
                    </div>
                 </div>
 
-                <div className="pt-10 border-t border-slate-50 space-y-5">
-                   <div className="flex justify-between items-center bg-slate-50/50 p-4 rounded-2xl">
-                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Adres Project</span>
-                      <span className="text-xs font-bold text-slate-900 uppercase">{activeProject?.address || 'Niet beschikbaar'}</span>
+                <div className="pt-4 border-t border-slate-50 space-y-1">
+                   <div className="flex justify-between items-center bg-slate-50/60 px-3 py-2.5 rounded-xl">
+                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Adres Project</span>
+                      <span className="text-[11px] font-bold text-slate-700">{activeProject?.address || 'Niet beschikbaar'}</span>
                    </div>
-                   <div className="flex justify-between items-center p-4">
-                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Woonoppervlakte</span>
-                      <span className="text-xs font-bold text-slate-900 uppercase">{user?.apartmentDetails?.surface || 0} m²</span>
+                   <div className="flex justify-between items-center px-3 py-2.5">
+                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Woonoppervlakte</span>
+                      <span className="text-[11px] font-bold text-slate-700">{user?.apartmentDetails?.surface || 0} m²</span>
                    </div>
-                   <div className="flex justify-between items-center p-4">
-                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Aantal Kamers</span>
-                      <span className="text-xs font-bold text-slate-900 uppercase">{user?.apartmentDetails?.rooms || 0}</span>
+                   <div className="flex justify-between items-center px-3 py-2.5">
+                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Aantal Kamers</span>
+                      <span className="text-[11px] font-bold text-slate-700">{user?.apartmentDetails?.rooms || 0}</span>
                    </div>
-                   <div className="flex justify-between items-center p-4">
-                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Etage / Verdieping</span>
-                      <span className="text-xs font-bold text-slate-900 uppercase">{user?.apartmentDetails?.floor || 0}e etage</span>
+                   <div className="flex justify-between items-center px-3 py-2.5">
+                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Etage / Verdieping</span>
+                      <span className="text-[11px] font-bold text-slate-700">{user?.apartmentDetails?.floor || 0}e etage</span>
                    </div>
                 </div>
              </div>
@@ -448,31 +448,31 @@ const CustomerPortal: React.FC = () => {
         </div>
 
         {/* Package Card */}
-        <div className="bg-white rounded-[3rem] border border-slate-100 overflow-hidden group hover:shadow-2xl transition-all duration-500 flex flex-col h-full">
-          <div className="p-6 sm:p-12 flex flex-col flex-1">
-             <div className="h-60 sm:h-72 rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden mb-8 sm:mb-12 shadow-2xl relative">
+        <div className="bg-white rounded-[2rem] border border-slate-100 overflow-hidden group hover:shadow-xl transition-all duration-500 flex flex-col">
+          <div className="p-5 sm:p-7 flex flex-col flex-1">
+             <div className="h-48 sm:h-56 rounded-[1.5rem] overflow-hidden mb-5 shadow-lg relative">
                 <img src={currentPackage?.photos?.[0]} className="w-full h-full object-cover group-hover:scale-105 transition-all duration-1000" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                <h3 className="absolute bottom-10 left-10 text-2xl font-black text-white uppercase tracking-tighter">Geselecteerd Pakket</h3>
+                <h3 className="absolute bottom-4 left-5 text-base font-black text-white uppercase tracking-tighter">Geselecteerd Pakket</h3>
              </div>
-             <h3 className="text-2xl font-black uppercase tracking-tighter mb-6 text-slate-900">{currentPackage?.name || 'Nog geen pakket gekozen'}</h3>
-             
-             <div className="space-y-4 mb-12 flex-1">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4">Hoogtepunten van selectie</span>
+             <h3 className="text-lg font-black uppercase tracking-tighter mb-4 text-slate-900">{currentPackage?.name || 'Nog geen pakket gekozen'}</h3>
+
+             <div className="space-y-2 mb-5 flex-1">
+                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">Hoogtepunten van selectie</span>
                 {(currentPackage?.inclusions || []).slice(0,6).map((inc, i) => (
-                  <div key={i} className="flex items-center gap-4 bg-slate-50/50 p-4 rounded-xl border border-slate-50">
-                    <span className="w-2 h-2 bg-[#8C7864] rounded-full shadow-sm" />
-                    <span className="text-[11px] font-bold text-slate-700 uppercase leading-none">{inc}</span>
+                  <div key={i} className="flex items-center gap-3 bg-slate-50/60 px-3 py-2.5 rounded-xl border border-slate-50">
+                    <span className="w-1.5 h-1.5 bg-[#8C7864] rounded-full shrink-0" />
+                    <span className="text-[11px] font-bold text-slate-700 leading-snug">{inc}</span>
                   </div>
                 ))}
                 {(currentPackage?.inclusions || []).length === 0 && (
-                  <div className="text-center py-10 text-[10px] text-slate-300 uppercase font-black italic">Geen informatie beschikbaar</div>
+                  <div className="text-center py-8 text-[10px] text-slate-300 uppercase font-black italic">Geen informatie beschikbaar</div>
                 )}
              </div>
 
-             <button 
-               onClick={() => setActiveView('Mijn Pakket')} 
-               className="w-full py-6 border-2 border-slate-100 text-[#8C7864] rounded-[1.5rem] font-black uppercase text-[10px] tracking-widest hover:bg-slate-50 hover:border-[#8C7864] transition-all"
+             <button
+               onClick={() => setActiveView('Mijn Pakket')}
+               className="w-full py-3.5 border-2 border-slate-100 text-[#8C7864] rounded-[1rem] font-black uppercase text-[10px] tracking-widest hover:bg-slate-50 hover:border-[#8C7864] transition-all"
              >
                Volledig pakket inzien
              </button>
