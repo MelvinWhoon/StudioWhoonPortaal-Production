@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useAuth, useTranslation } from '../App';
+import { useAuth, useTranslation, triggerGoogleTranslate } from '../App';
 import { dataService } from '../dataService';
 import { UserRole, Project } from '../types';
 
@@ -109,7 +109,7 @@ const Header: React.FC = () => {
               ] as const).map(({ code, flag, label }) => (
                 <button
                   key={code}
-                  onClick={() => { setLang(code); setLangMenuOpen(false); }}
+                  onClick={() => { setLang(code); triggerGoogleTranslate(code); setLangMenuOpen(false); }}
                   className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-[10px] font-black uppercase tracking-widest transition-colors ${
                     lang === code
                       ? 'bg-[#8C7864]/10 text-[#8C7864]'

@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { MOCK_USERS, IMAGES } from '../constants';
-import { useTranslation } from '../App';
+import { useTranslation, triggerGoogleTranslate } from '../App';
 import { UserRole } from '../types';
 
 interface LoginProps {
@@ -81,7 +81,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, isLoggingIn }) => {
                     <button
                       key={l}
                       type="button"
-                      onClick={() => setLang(l)}
+                      onClick={() => { setLang(l); triggerGoogleTranslate(l); }}
                       className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5 ${
                         lang === l
                           ? 'bg-[#8C7864] text-white shadow-md shadow-[#8C7864]/20'

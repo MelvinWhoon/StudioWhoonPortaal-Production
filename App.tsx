@@ -78,6 +78,49 @@ export const useMessageTranslation = (messages: Message[], targetLang: Language)
   return { translatedMessages, isTranslating };
 };
 
+// Programmatically trigger Google Translate for full-page translation.
+// Relies on the hidden .google_translate_element div always being in the DOM.
+export const triggerGoogleTranslate = (targetLang: string) => {
+  const selectEl = document.querySelector<HTMLSelectElement>('select.goog-te-combo');
+
+  if (targetLang === 'nl') {
+    // Restore original Dutch: clear cookie, then trigger "show original" via the select
+    const exp = new Date(0).toUTCString();
+    document.cookie = `googtrans=; path=/; expires=${exp}`;
+    document.cookie = `googtrans=; path=/; domain=.${window.location.hostname}; expires=${exp}`;
+    if (selectEl) {
+      // Setting value to '' signals Google Translate to restore original
+      selectEl.value = '';
+      selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+    } else {
+      // Try the close button inside the GT banner iframe
+      try {
+        const banner = document.querySelector<HTMLIFrameElement>('.goog-te-banner-frame');
+        const doc = banner?.contentDocument || banner?.contentWindow?.document;
+        const closeBtn = doc?.querySelector<HTMLElement>('.goog-close-link, [id*="restore"]');
+        closeBtn?.click();
+      } catch (_) { /* cross-origin – ignore */ }
+    }
+  } else {
+    if (selectEl) {
+      selectEl.value = targetLang;
+      selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+    } else {
+      // Widget not yet ready (script still loading) – retry after a short delay
+      const attempt = (tries: number) => {
+        const el = document.querySelector<HTMLSelectElement>('select.goog-te-combo');
+        if (el) {
+          el.value = targetLang;
+          el.dispatchEvent(new Event('change', { bubbles: true }));
+        } else if (tries > 0) {
+          setTimeout(() => attempt(tries - 1), 600);
+        }
+      };
+      attempt(5);
+    }
+  }
+};
+
 const buildLabel = (() => {
   try {
     const d = new Date(__BUILD_TIME__);
@@ -224,6 +267,14 @@ const App: React.FC = () => {
   return (
     <AuthContext.Provider value={{ user, login, logout, activeProject, setActiveProject, activeView, setActiveView, isSidebarOpen, setSidebarOpen }}>
       <TranslationContext.Provider value={{ t, lang, setLang }}>
+        {/* Always-mounted hidden widget so Google Translate initialises once and stays ready */}
+        <div
+          aria-hidden="true"
+          style={{ position: 'fixed', top: -9999, left: -9999, width: 1, height: 1, overflow: 'hidden', opacity: 0, pointerEvents: 'none' }}
+        >
+          <div className="google_translate_element" />
+        </div>
+
         {!user ? (
           <Login onLogin={login} isLoggingIn={isLoggingIn} />
         ) : (
