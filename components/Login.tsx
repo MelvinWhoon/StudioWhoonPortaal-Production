@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { MOCK_USERS, IMAGES } from '../constants';
 import { useTranslation } from '../App';
 import { UserRole } from '../types';
@@ -12,33 +12,7 @@ interface LoginProps {
 const Login: React.FC<LoginProps> = ({ onLogin, isLoggingIn }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { t } = useTranslation();
-
-  useEffect(() => {
-    const initGoogleTranslate = () => {
-      if ((window as any).google && (window as any).google.translate && (window as any).google.translate.TranslateElement) {
-        const gtElements = document.querySelectorAll('.google_translate_element');
-        gtElements.forEach(el => {
-          if (el.innerHTML.trim() === '') {
-            try {
-              new (window as any).google.translate.TranslateElement(
-                { pageLanguage: 'nl', autoDisplay: false },
-                el
-              );
-            } catch (e) {
-              console.error('Error initializing Google Translate in Login:', e);
-            }
-          }
-        });
-      }
-    };
-
-    if ((window as any).google && (window as any).google.translate) {
-      initGoogleTranslate();
-    } else {
-      setTimeout(initGoogleTranslate, 500);
-    }
-  }, []);
+  const { t, lang, setLang } = useTranslation();
 
   const getTranslatedRole = (role: UserRole) => {
     switch(role) {
@@ -98,8 +72,28 @@ const Login: React.FC<LoginProps> = ({ onLogin, isLoggingIn }) => {
             </div>
             
             <div className="flex flex-col items-center justify-center pt-2 pb-4">
-              <label className="block text-[10px] font-black uppercase text-slate-400 mb-2 tracking-widest">Taal / Language</label>
-              <div className="google_translate_element w-full flex justify-center overflow-hidden rounded-xl border border-slate-100 bg-slate-50 p-2"></div>
+              <label className="block text-[10px] font-black uppercase text-slate-400 mb-3 tracking-widest">Taal / Language</label>
+              <div className="flex gap-2">
+                {(['nl', 'en', 'es'] as const).map((l) => {
+                  const flags: Record<string, string> = { nl: '🇳🇱', en: '🇬🇧', es: '🇪🇸' };
+                  const labels: Record<string, string> = { nl: 'NL', en: 'EN', es: 'ES' };
+                  return (
+                    <button
+                      key={l}
+                      type="button"
+                      onClick={() => setLang(l)}
+                      className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5 ${
+                        lang === l
+                          ? 'bg-[#8C7864] text-white shadow-md shadow-[#8C7864]/20'
+                          : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                      }`}
+                    >
+                      <span>{flags[l]}</span>
+                      <span>{labels[l]}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <button
@@ -143,16 +137,6 @@ const Login: React.FC<LoginProps> = ({ onLogin, isLoggingIn }) => {
           0% { transform: scale(1); }
           50% { transform: scale(1.08); }
           100% { transform: scale(1); }
-        }
-        .google_translate_element select {
-          width: 100%;
-          padding: 8px;
-          border-radius: 8px;
-          border: 1px solid #e2e8f0;
-          background-color: white;
-          font-size: 14px;
-          color: #475569;
-          outline: none;
         }
       `}</style>
     </div>
