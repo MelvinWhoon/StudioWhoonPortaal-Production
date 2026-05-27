@@ -28,9 +28,9 @@ class DataService {
   async translateText(text: string, targetLang: string): Promise<string> {
     if (targetLang === 'nl' || !text.trim()) return text;
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
       const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-2.0-flash-exp',
         contents: `Translate the following customer portal message to ${targetLang}. Only return the translated text, no explanation: "${text}"`,
       });
       return response.text || text;
