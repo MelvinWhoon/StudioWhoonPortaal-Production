@@ -35,8 +35,12 @@ CREATE TABLE IF NOT EXISTS master_packages (
     category TEXT DEFAULT 'Standaard',
     inclusions JSONB DEFAULT '[]'::jsonb,
     photos JSONB DEFAULT '[]'::jsonb,
-    option_ids JSONB DEFAULT '[]'::jsonb
+    option_ids JSONB DEFAULT '[]'::jsonb,
+    description TEXT
 );
+
+-- Migration: add description if table was already created without it
+ALTER TABLE master_packages ADD COLUMN IF NOT EXISTS description TEXT;
 
 -- 3. USERS TABLE
 CREATE TABLE IF NOT EXISTS users (

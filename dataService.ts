@@ -586,7 +586,8 @@ class DataService {
         projectId: p.project_id,
         optionIds: typeof p.option_ids === 'string' ? JSON.parse(p.option_ids) : (p.option_ids || []),
         inclusions: typeof p.inclusions === 'string' ? JSON.parse(p.inclusions) : (p.inclusions || []),
-        photos: typeof p.photos === 'string' ? JSON.parse(p.photos) : (p.photos || [])
+        photos: typeof p.photos === 'string' ? JSON.parse(p.photos) : (p.photos || []),
+        description: p.description || ''
       }));
     } catch (e: any) {
       console.error('Error fetching master packages:', e);
@@ -606,7 +607,8 @@ class DataService {
         category: pkg.category,
         inclusions: JSON.stringify(pkg.inclusions || []),
         photos: JSON.stringify(pkg.photos || []),
-        option_ids: JSON.stringify(pkg.optionIds || [])
+        option_ids: JSON.stringify(pkg.optionIds || []),
+        ...(pkg.description !== undefined && pkg.description !== null && pkg.description !== '' ? { description: pkg.description } : {})
       }]);
     
     if (error) {
@@ -628,7 +630,8 @@ class DataService {
         category: updates.category,
         inclusions: updates.inclusions ? JSON.stringify(updates.inclusions) : undefined,
         photos: updates.photos ? JSON.stringify(updates.photos) : undefined,
-        option_ids: updates.optionIds ? JSON.stringify(updates.optionIds) : undefined
+        option_ids: updates.optionIds ? JSON.stringify(updates.optionIds) : undefined,
+        ...(updates.description !== undefined ? { description: updates.description } : {})
       })
       .eq('id', id);
     

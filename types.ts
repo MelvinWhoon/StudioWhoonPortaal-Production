@@ -22,13 +22,14 @@ export interface PackageOption {
 
 export interface MasterPackage {
   id: string;
-  name: string; 
+  name: string;
   projectId: string;
   category: string; // Toegevoegd voor filtering en onderverdeling
   optionIds: string[];
   price?: number;
   inclusions?: string[];
   photos?: string[];
+  description?: string; // Vrije tekst uitleg over het pakket
 }
 
 export interface Project {

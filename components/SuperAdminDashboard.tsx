@@ -1106,7 +1106,10 @@ const SuperAdminDashboard: React.FC = () => {
                             <option value="Luxe">Luxe</option>
                             <option value="Modern">Modern</option>
                             <option value="Klassiek">Klassiek</option>
-                            <option value="NEW">Nieuwe Categorie...</option>
+                            {uniqueCategories.filter(c => !['Standaard','Luxe','Modern','Klassiek'].includes(c)).map(c => (
+                              <option key={c} value={c}>{c}</option>
+                            ))}
+                            <option value="NEW">+ Nieuwe Categorie...</option>
                           </select>
                        </div>
                        <div>
@@ -1137,10 +1140,10 @@ const SuperAdminDashboard: React.FC = () => {
                   <div className="space-y-4">
                      <label className="text-[10px] font-black uppercase text-slate-400 block">Inhoud van het pakket</label>
                      <div className="flex gap-2">
-                        <input placeholder="Item toevoegen (bijv. Vloerverwarming)..." className="flex-1 p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none text-sm" value={newInclusionInput} onChange={e => setNewInclusionInput(e.target.value)} />
+                        <input placeholder="Item toevoegen (bijv. Vloerverwarming)..." className="flex-1 p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none text-sm" value={newInclusionInput} onChange={e => setNewInclusionInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addInclusion())} />
                         <button type="button" onClick={addInclusion} className="w-10 h-10 bg-slate-900 text-white rounded-xl font-bold">+</button>
                      </div>
-                     <div className="max-h-60 overflow-y-auto space-y-2 border border-slate-50 p-4 rounded-2xl bg-slate-50/50">
+                     <div className="max-h-40 overflow-y-auto space-y-2 border border-slate-50 p-4 rounded-2xl bg-slate-50/50">
                         {newPackage.inclusions?.map((inc, i) => (
                           <div key={i} className="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
                              <span className="text-[10px] font-bold uppercase text-slate-600">{inc}</span>
@@ -1148,8 +1151,19 @@ const SuperAdminDashboard: React.FC = () => {
                           </div>
                         ))}
                         {(!newPackage.inclusions || newPackage.inclusions.length === 0) && (
-                           <div className="text-center py-10 text-[9px] font-black text-slate-300 uppercase italic">Nog geen items toegevoegd</div>
+                           <div className="text-center py-6 text-[9px] font-black text-slate-300 uppercase italic">Nog geen items toegevoegd</div>
                         )}
+                     </div>
+
+                     <div>
+                        <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block">Pakketomschrijving</label>
+                        <textarea
+                           placeholder="Voeg een uitleg of omschrijving toe over dit pakket, wat de klant kan verwachten, sfeer, stijl, etc."
+                           rows={4}
+                           className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none text-sm resize-none leading-relaxed"
+                           value={newPackage.description || ''}
+                           onChange={e => setNewPackage({...newPackage, description: e.target.value})}
+                        />
                      </div>
                   </div>
                </div>
