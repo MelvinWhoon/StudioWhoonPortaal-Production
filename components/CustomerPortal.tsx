@@ -42,6 +42,8 @@ const CustomerPortal: React.FC = () => {
   const [uploadFileName, setUploadFileName] = useState('');
   const msgEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const hasShownAutoReply = useRef(false);
+  const [systemMessages, setSystemMessages] = useState<Array<{id: string; text: string; date: string}>>([]);
 
   const [isInitialLoading, setIsInitialLoading] = useState(true);
 
@@ -90,13 +92,25 @@ const CustomerPortal: React.FC = () => {
     e.preventDefault();
     const targetProjectId = activeProject?.id || user?.projectId;
     if (!newMessage.trim() || !user || !targetProjectId || isSending) return;
-    
+
     setIsSending(true);
     try {
       await dataService.sendMessage(targetProjectId, user.id, user.id, user.name, user.role, newMessage);
       const updatedMessages = await dataService.getMessages(user.id);
       setMessages(updatedMessages);
       setNewMessage('');
+
+      // Eénmalige auto-reply per sessie
+      if (!hasShownAutoReply.current) {
+        hasShownAutoReply.current = true;
+        setTimeout(() => {
+          setSystemMessages(prev => [...prev, {
+            id: `sys-${Date.now()}`,
+            text: 'Uw bericht is ontvangen. Deze chat wordt niet realtime bijgehouden — uw projectbegeleider reageert zo snel mogelijk.',
+            date: new Date().toISOString()
+          }]);
+        }, 1000);
+      }
     } catch (err) {
       console.error("Error sending message:", err);
       alert("Er is een fout opgetreden bij het verzenden van uw bericht.");
@@ -211,6 +225,12 @@ const CustomerPortal: React.FC = () => {
   }
 
   if (activeView === 'Berichten') {
+    // Merge real messages with local system messages, sorted by date
+    const chatItems = [
+      ...messages.map(m => ({ kind: 'msg' as const, data: m, date: m.date })),
+      ...systemMessages.map(s => ({ kind: 'sys' as const, data: s, date: s.date }))
+    ].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
     return (
       <div className="flex flex-col lg:flex-row gap-5 h-auto lg:h-[calc(100vh-120px)] animate-in fade-in">
         <div className="flex-1 min-h-[380px] bg-white rounded-[2rem] border border-slate-100 shadow-sm flex flex-col overflow-hidden">
@@ -218,24 +238,63 @@ const CustomerPortal: React.FC = () => {
             <h2 className="text-xs font-black uppercase tracking-widest text-slate-900">Project Chat</h2>
             {isTranslating && <span className="text-[8px] font-black text-[#8C7864] animate-pulse">Vertaald door AI...</span>}
           </div>
-          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4 custom-scrollbar bg-slate-50/20">
-            {messages.map(m => {
+
+          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3 custom-scrollbar bg-slate-50/20">
+            {chatItems.map(item => {
+              // System / auto-reply message
+              if (item.kind === 'sys') {
+                return (
+                  <div key={item.data.id} className="flex justify-center my-2 animate-in fade-in duration-500">
+                    <div className="bg-slate-100/90 border border-slate-200/60 rounded-2xl px-4 py-2.5 max-w-[85%] flex items-start gap-2">
+                      <span className="text-slate-400 text-[12px] mt-0.5 shrink-0">💬</span>
+                      <p className="text-[10px] text-slate-500 leading-relaxed">{item.data.text}</p>
+                    </div>
+                  </div>
+                );
+              }
+
+              // Regular chat message
+              const m = item.data;
               const isMe = m.senderId === user?.id;
               const text = translatedMessages[m.id] || m.text;
+              // "Read" heuristic: admin has replied after this message
+              const isRead = isMe && messages.some(
+                msg => msg.role !== UserRole.CUSTOMER && new Date(msg.date) > new Date(m.date)
+              );
+
               return (
                 <div key={m.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[70%] px-4 py-3 rounded-2xl shadow-sm ${isMe ? 'bg-[#8C7864] text-white rounded-br-none' : 'bg-white text-slate-800 border border-slate-100 rounded-bl-none'}`}>
+                  <div className={`max-w-[72%] px-4 py-3 rounded-2xl shadow-sm ${
+                    isMe
+                      ? 'bg-[#8C7864] text-white rounded-br-sm'
+                      : 'bg-white text-slate-800 border border-slate-100 rounded-bl-sm shadow-none'
+                  }`}>
                     <p className="text-sm leading-snug">{text}</p>
-                    <span className="text-[8px] block mt-1 opacity-60 uppercase">{new Date(m.date).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+                    <div className="flex items-center justify-end gap-1.5 mt-1.5">
+                      <span className={`text-[9px] ${isMe ? 'text-white/60' : 'text-slate-400'}`}>
+                        {new Date(m.date).toLocaleTimeString('nl-NL', {hour:'2-digit', minute:'2-digit'})}
+                      </span>
+                      {isMe && (
+                        <span className={`text-[10px] leading-none tracking-[-2px] transition-colors duration-300 ${
+                          isRead ? 'text-blue-200' : 'text-white/40'
+                        }`}>✓✓</span>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
             })}
+            {chatItems.length === 0 && (
+              <div className="flex-1 flex items-center justify-center py-16">
+                <p className="text-[10px] font-black uppercase text-slate-300 italic">Nog geen berichten</p>
+              </div>
+            )}
             <div ref={msgEndRef} />
           </div>
+
           <form onSubmit={handleSendMessage} className="px-5 py-4 border-t border-slate-50 bg-white flex gap-3">
             <input
-              className="flex-1 px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl outline-none text-sm"
+              className="flex-1 px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl outline-none text-sm focus:border-[#8C7864] transition-colors"
               placeholder={t('type_message')}
               value={newMessage}
               onChange={e=>setNewMessage(e.target.value)}
@@ -250,10 +309,16 @@ const CustomerPortal: React.FC = () => {
                   : 'bg-[#8C7864] text-white shadow-lg shadow-[#8C7864]/20'
               }`}
             >
-              {isSending ? '...' : 'Verzend'}
+              {isSending ? (
+                <span className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin inline-block" />
+                  <span>Verzenden</span>
+                </span>
+              ) : 'Verzend'}
             </button>
           </form>
         </div>
+
         <div className="w-full lg:w-64 bg-white rounded-[2rem] border border-slate-100 p-5 shrink-0">
            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 border-b border-slate-50 pb-3">Meldingen</h3>
            <div className="space-y-3 max-h-48 lg:max-h-none lg:h-[calc(100%-52px)] overflow-y-auto custom-scrollbar">
