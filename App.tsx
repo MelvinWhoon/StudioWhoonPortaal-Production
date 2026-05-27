@@ -78,6 +78,16 @@ export const useMessageTranslation = (messages: Message[], targetLang: Language)
   return { translatedMessages, isTranslating };
 };
 
+const buildLabel = (() => {
+  try {
+    const d = new Date(__BUILD_TIME__);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `v${d.getUTCFullYear()}.${pad(d.getUTCMonth() + 1)}.${pad(d.getUTCDate())} · ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
+  } catch {
+    return '';
+  }
+})();
+
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [activeProject, setActiveProject] = useState<Project | null>(null);
@@ -218,7 +228,7 @@ const App: React.FC = () => {
           <Login onLogin={login} isLoggingIn={isLoggingIn} />
         ) : (
           <div className="flex h-screen font-inter overflow-hidden relative" style={{ backgroundColor: activeProject?.backgroundColor || '#edeae6' }}>
-            <div 
+            <div
               className="absolute inset-0 z-0 bg-cover bg-center opacity-20 pointer-events-none print:hidden"
               style={{ backgroundImage: `url(https://www.whoon.com/wp-content/uploads/2026/02/2e51ae92f59d5cb308c03b8dd6b83d91.jpg)` }}
             />
@@ -235,6 +245,11 @@ const App: React.FC = () => {
                 {user.role === UserRole.CUSTOMER && <CustomerPortal />}
               </main>
             </div>
+          </div>
+        )}
+        {buildLabel && (
+          <div className="fixed bottom-2 right-3 z-[9999] pointer-events-none print:hidden select-none">
+            <span className="text-[9px] font-mono text-slate-500 opacity-25 tracking-tight">{buildLabel}</span>
           </div>
         )}
       </TranslationContext.Provider>
