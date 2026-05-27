@@ -24,7 +24,7 @@ const FeedbackModal: React.FC<{
   pass?: string | null;
 }> = ({ title, message, type, onClose, pass }) => (
   <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[200] flex items-center justify-center p-6">
-    <div className="bg-white rounded-[3rem] p-12 w-full max-w-md shadow-2xl animate-in zoom-in-95 text-center text-slate-900">
+    <div className="bg-white rounded-[2rem] sm:rounded-[3rem] p-8 sm:p-12 w-full max-w-md shadow-2xl animate-in zoom-in-95 text-center text-slate-900">
        <div className={`w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-8 text-3xl shadow-xl ${
          type === 'success' ? 'bg-green-50 text-green-500' : type === 'error' ? 'bg-red-50 text-red-500' : 'bg-[#8C7864]/10 text-[#8C7864]'
        }`}>
@@ -52,7 +52,7 @@ const ConfirmModal: React.FC<{
   isDestructive?: boolean;
 }> = ({ title, message, onConfirm, onCancel, confirmText = 'Bevestigen', isDestructive = false }) => (
   <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[200] flex items-center justify-center p-6">
-    <div className="bg-white rounded-[3rem] p-12 w-full max-w-sm shadow-2xl animate-in zoom-in-95 text-center text-slate-900">
+    <div className="bg-white rounded-[2rem] sm:rounded-[3rem] p-8 sm:p-12 w-full max-w-sm shadow-2xl animate-in zoom-in-95 text-center text-slate-900">
        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-8 text-2xl ${isDestructive ? 'bg-red-50 text-red-500' : 'bg-orange-50 text-orange-500'}`}>
           {isDestructive ? '🗑️' : '⚠️'}
        </div>
@@ -127,6 +127,8 @@ const SuperAdminDashboard: React.FC = () => {
   const [newPackage, setNewPackage] = useState<Partial<MasterPackage>>({ inclusions: [], projectId: '', category: 'Standaard', photos: [] });
   const [newCategoryInput, setNewCategoryInput] = useState('');
   const [newInclusionInput, setNewInclusionInput] = useState('');
+  const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
+  const [categoryRenames, setCategoryRenames] = useState<Record<string, string>>({});
   const [generatedPass, setGeneratedPass] = useState<string | null>(null);
 
   const projectPhotosRef = useRef<HTMLInputElement>(null);
@@ -350,6 +352,47 @@ const SuperAdminDashboard: React.FC = () => {
     }
   };
 
+  const handleRenameCategory = async (oldCategory: string) => {
+    const newCat = categoryRenames[oldCategory]?.trim();
+    if (!newCat || newCat === oldCategory) return;
+    setIsLoading(true);
+    try {
+      const packagesToUpdate = masterPackages.filter(p => p.category === oldCategory);
+      await Promise.all(packagesToUpdate.map(p =>
+        dataService.updateMasterPackage(p.id, { category: newCat })
+      ));
+      await refreshData();
+      setCategoryRenames(prev => { const next = { ...prev }; delete next[oldCategory]; return next; });
+      setFeedback({ title: "Categorie Hernoemd", msg: `${packagesToUpdate.length} pakket(ten) bijgewerkt naar "${newCat}".`, type: 'success' });
+    } catch {
+      setFeedback({ title: "Fout", msg: t('error_generic'), type: 'error' });
+    } finally { setIsLoading(false); }
+  };
+
+  const handleDeleteCategory = (categoryToDelete: string) => {
+    const count = masterPackages.filter(p => p.category === categoryToDelete).length;
+    setConfirmData({
+      title: "Categorie Verwijderen",
+      message: `${count} pakket(ten) in "${categoryToDelete}" worden teruggezet naar "Standaard". Doorgaan?`,
+      isDestructive: true,
+      onConfirm: async () => {
+        setIsLoading(true);
+        try {
+          const packagesToUpdate = masterPackages.filter(p => p.category === categoryToDelete);
+          await Promise.all(packagesToUpdate.map(p =>
+            dataService.updateMasterPackage(p.id, { category: 'Standaard' })
+          ));
+          setConfirmData(null);
+          await refreshData();
+          setFeedback({ title: "Categorie Verwijderd", type: 'success' });
+        } catch {
+          setConfirmData(null);
+          setFeedback({ title: "Fout", msg: t('error_generic'), type: 'error' });
+        } finally { setIsLoading(false); }
+      }
+    });
+  };
+
   const handleProjectPhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []) as File[];
     files.forEach(file => {
@@ -411,7 +454,7 @@ const SuperAdminDashboard: React.FC = () => {
            const isCurrentlyEscalated = chatMessages.some(m => m.isEscalated);
 
            return (
-             <div className="flex flex-col h-[calc(100vh-160px)] bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden animate-in slide-in-from-right-4 duration-300">
+             <div className="flex flex-col min-h-[500px] lg:h-[calc(100vh-160px)] bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden animate-in slide-in-from-right-4 duration-300">
                 <div className="p-8 border-b border-slate-50 flex items-center justify-between">
                    <div className="flex items-center gap-4">
                       <button onClick={() => setActiveChatId(null)} className="p-3 bg-slate-100 rounded-xl text-xs hover:bg-slate-200 transition-all">←</button>
@@ -678,6 +721,7 @@ const SuperAdminDashboard: React.FC = () => {
                       <option value="ALL">ALLE CATEGORIEËN</option>
                       {uniqueCategories.map(c => <option key={c} value={c}>{c.toUpperCase()}</option>)}
                    </select>
+                   <button onClick={() => { setCategoryRenames({}); setIsCategoryManagerOpen(true); }} className="px-6 py-3 bg-white border border-slate-100 text-slate-600 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-sm active:scale-95 transition-all">⚙️ Categorieën</button>
                    <button onClick={() => { setEditingPackageId(null); setNewPackage({ inclusions: [], projectId: '', category: 'Standaard', photos: [] }); setIsPackageModalOpen(true); }} className="px-6 py-3 bg-[#8C7864] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-[#8C7864]/20 active:scale-95 transition-all">Nieuw Pakket</button>
                 </div>
              </div>
@@ -818,7 +862,7 @@ const SuperAdminDashboard: React.FC = () => {
       {/* PACKAGE DETAIL MODAL (Fixed 'Bekijk meer') */}
       {selectedPackageForDetail && (
          <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[150] flex items-center justify-center p-6 overflow-y-auto">
-            <div className="bg-white rounded-[3rem] p-12 w-full max-w-5xl shadow-2xl animate-in zoom-in-95 my-8 text-slate-900 relative">
+            <div className="bg-white rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-12 w-full max-w-5xl shadow-2xl animate-in zoom-in-95 my-8 text-slate-900 relative">
                <button 
                   onClick={() => setSelectedPackageForDetail(null)}
                   className="absolute top-10 right-10 w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center hover:bg-slate-200 transition-all text-xl"
@@ -826,7 +870,7 @@ const SuperAdminDashboard: React.FC = () => {
                
                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
                   <div className="space-y-6">
-                     <h2 className="text-4xl font-black uppercase tracking-tighter mb-4">{selectedPackageForDetail.name}</h2>
+                     <h2 className="text-2xl sm:text-4xl font-black uppercase tracking-tighter mb-4">{selectedPackageForDetail.name}</h2>
                      <span className="px-4 py-1.5 bg-[#8C7864] text-white text-[10px] font-black rounded-lg uppercase tracking-widest">{selectedPackageForDetail.category}</span>
                      
                      <div className="pt-8 border-t border-slate-50">
@@ -841,6 +885,13 @@ const SuperAdminDashboard: React.FC = () => {
                         </ul>
                      </div>
                      
+                     {selectedPackageForDetail.description && (
+                        <div className="pt-8 border-t border-slate-50">
+                           <h3 className="text-sm font-black uppercase tracking-widest text-slate-400 mb-4">Pakketomschrijving</h3>
+                           <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">{selectedPackageForDetail.description}</p>
+                        </div>
+                     )}
+
                      {selectedPackageForDetail.price && (
                         <div className="pt-8 border-t border-slate-50">
                            <span className="text-[10px] font-black uppercase text-slate-400 block mb-1">Vanaf prijs</span>
@@ -873,8 +924,8 @@ const SuperAdminDashboard: React.FC = () => {
       {/* USER MODAL */}
       {isUserModalOpen && (
          <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[100] flex items-center justify-center p-6 overflow-y-auto">
-            <div className="bg-white rounded-[3rem] p-12 w-full max-w-xl shadow-2xl animate-in zoom-in-95 my-8 text-slate-900 relative">
-               <h2 className="text-3xl font-black mb-10 uppercase tracking-tighter">{editingUserId ? 'Gebruiker Bewerken' : 'Nieuwe Gebruiker'}</h2>
+            <div className="bg-white rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-12 w-full max-w-xl shadow-2xl animate-in zoom-in-95 my-8 text-slate-900 relative">
+               <h2 className="text-2xl sm:text-3xl font-black mb-8 sm:mb-10 uppercase tracking-tighter">{editingUserId ? 'Gebruiker Bewerken' : 'Nieuwe Gebruiker'}</h2>
                
                {generatedPass ? (
                  <div className="bg-green-50 p-8 rounded-[2rem] border border-green-100 text-center animate-in fade-in zoom-in">
@@ -958,8 +1009,8 @@ const SuperAdminDashboard: React.FC = () => {
       {/* PROJECT MODAL */}
       {isProjectModalOpen && (
          <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[100] flex items-center justify-center p-6 overflow-y-auto">
-            <form onSubmit={handleSaveProject} className="bg-white rounded-[3rem] p-12 w-full max-w-3xl shadow-2xl animate-in zoom-in-95 my-8 text-slate-900 relative">
-               <h2 className="text-3xl font-black mb-10 uppercase tracking-tighter">{editingProjectId ? 'Project Bewerken' : 'Nieuw Project'}</h2>
+            <form onSubmit={handleSaveProject} className="bg-white rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-12 w-full max-w-3xl shadow-2xl animate-in zoom-in-95 my-8 text-slate-900 relative">
+               <h2 className="text-2xl sm:text-3xl font-black mb-8 sm:mb-10 uppercase tracking-tighter">{editingProjectId ? 'Project Bewerken' : 'Nieuw Project'}</h2>
                
                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                   <div className="space-y-6">
@@ -1082,10 +1133,64 @@ const SuperAdminDashboard: React.FC = () => {
       )}
 
       {/* PACKAGE MODAL (Updated with Image Upload) */}
+      {/* CATEGORY MANAGER MODAL */}
+      {isCategoryManagerOpen && (
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[150] flex items-center justify-center p-6">
+          <div className="bg-white rounded-[2rem] sm:rounded-[3rem] p-8 sm:p-12 w-full max-w-lg shadow-2xl animate-in zoom-in-95 text-slate-900">
+            <div className="flex items-center justify-between mb-10">
+              <div>
+                <h2 className="text-2xl font-black uppercase tracking-tighter">Categorieën Beheren</h2>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Hernoem of verwijder categorieën</p>
+              </div>
+              <button onClick={() => setIsCategoryManagerOpen(false)} className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center hover:bg-slate-200 transition-all text-lg">✕</button>
+            </div>
+            <div className="space-y-3 max-h-[60vh] overflow-y-auto custom-scrollbar pr-1">
+              {uniqueCategories.length === 0 ? (
+                <div className="text-center py-16 text-[10px] font-black uppercase text-slate-300 italic">Nog geen categorieën aangemaakt</div>
+              ) : (
+                uniqueCategories.map(cat => {
+                  const pkgCount = masterPackages.filter(p => p.category === cat).length;
+                  return (
+                    <div key={cat} className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 group">
+                      <div className="flex-1 min-w-0">
+                        <input
+                          className="w-full p-3 bg-white border border-slate-100 rounded-xl outline-none text-sm font-bold focus:border-[#8C7864] transition-all"
+                          value={categoryRenames[cat] !== undefined ? categoryRenames[cat] : cat}
+                          onChange={e => setCategoryRenames(prev => ({ ...prev, [cat]: e.target.value }))}
+                          onKeyDown={e => e.key === 'Enter' && handleRenameCategory(cat)}
+                        />
+                        <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest pl-1 mt-1 block">{pkgCount} pakket{pkgCount !== 1 ? 'ten' : ''}</span>
+                      </div>
+                      <div className="flex gap-2 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => handleRenameCategory(cat)}
+                          disabled={!categoryRenames[cat] || categoryRenames[cat]?.trim() === cat || isLoading}
+                          className="px-4 py-2 bg-[#8C7864] text-white rounded-xl text-[9px] font-black uppercase tracking-widest disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#6e5f52] transition-all"
+                        >Opslaan</button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteCategory(cat)}
+                          className="w-9 h-9 bg-red-50 text-red-400 rounded-xl hover:bg-red-500 hover:text-white transition-all flex items-center justify-center"
+                          title="Categorie verwijderen"
+                        >🗑️</button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+            <div className="mt-8 pt-6 border-t border-slate-50 text-center">
+              <p className="text-[9px] font-black uppercase text-slate-300 tracking-widest">Nieuwe categorieën aanmaken via "Nieuw Pakket → Nieuwe Categorie"</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {isPackageModalOpen && (
          <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[100] flex items-center justify-center p-6 overflow-y-auto">
-            <form onSubmit={handleSavePackage} className="bg-white rounded-[3rem] p-12 w-full max-w-4xl shadow-2xl animate-in zoom-in-95 my-8 text-slate-900">
-               <h2 className="text-3xl font-black mb-10 uppercase tracking-tighter">{editingPackageId ? 'Pakket Bewerken' : 'Nieuw Pakket'}</h2>
+            <form onSubmit={handleSavePackage} className="bg-white rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-12 w-full max-w-4xl shadow-2xl animate-in zoom-in-95 my-8 text-slate-900">
+               <h2 className="text-2xl sm:text-3xl font-black mb-8 sm:mb-10 uppercase tracking-tighter">{editingPackageId ? 'Pakket Bewerken' : 'Nieuw Pakket'}</h2>
                
                <div className="grid grid-cols-1 md:grid-cols-2 gap-10 text-slate-900">
                   <div className="space-y-6">

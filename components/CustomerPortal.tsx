@@ -172,37 +172,39 @@ const CustomerPortal: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-[2.5rem] border border-slate-100 overflow-hidden shadow-sm">
-          <div className="p-8 border-b border-slate-50">
+        <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
+          <div className="p-6 sm:p-8 border-b border-slate-50">
             <h2 className="text-sm font-black uppercase tracking-widest text-slate-900">Betalingshistorie</h2>
           </div>
-          <table className="w-full text-left">
-            <thead className="bg-slate-50/50">
-              <tr>
-                <th className="p-8 text-[10px] font-black uppercase text-slate-400">Datum</th>
-                <th className="p-8 text-[10px] font-black uppercase text-slate-400">Bedrag</th>
-                <th className="p-8 text-[10px] font-black uppercase text-slate-400">Notitie</th>
-                <th className="p-8 text-[10px] font-black uppercase text-slate-400">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
-              {payments.map(p => (
-                <tr key={p.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="p-8 text-xs text-slate-500 font-bold">{new Date(p.date).toLocaleDateString('nl-NL')}</td>
-                  <td className="p-8 text-sm font-black text-slate-900 tracking-tight">€{Number(p.amount).toLocaleString('nl-NL')}</td>
-                  <td className="p-8 text-xs text-slate-500">{p.note || '-'}</td>
-                  <td className="p-8">
-                    <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-[10px] font-black uppercase tracking-widest">Betaald</span>
-                  </td>
-                </tr>
-              ))}
-              {payments.length === 0 && (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left min-w-[440px]">
+              <thead className="bg-slate-50/50">
                 <tr>
-                  <td colSpan={4} className="p-24 text-center text-[10px] font-black uppercase text-slate-300 italic">Geen betalingen gevonden</td>
+                  <th className="px-6 py-4 sm:p-8 text-[10px] font-black uppercase text-slate-400">Datum</th>
+                  <th className="px-6 py-4 sm:p-8 text-[10px] font-black uppercase text-slate-400">Bedrag</th>
+                  <th className="px-6 py-4 sm:p-8 text-[10px] font-black uppercase text-slate-400">Notitie</th>
+                  <th className="px-6 py-4 sm:p-8 text-[10px] font-black uppercase text-slate-400">Status</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {payments.map(p => (
+                  <tr key={p.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-6 py-4 sm:p-8 text-xs text-slate-500 font-bold">{new Date(p.date).toLocaleDateString('nl-NL')}</td>
+                    <td className="px-6 py-4 sm:p-8 text-sm font-black text-slate-900 tracking-tight">€{Number(p.amount).toLocaleString('nl-NL')}</td>
+                    <td className="px-6 py-4 sm:p-8 text-xs text-slate-500">{p.note || '-'}</td>
+                    <td className="px-6 py-4 sm:p-8">
+                      <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-[10px] font-black uppercase tracking-widest">Betaald</span>
+                    </td>
+                  </tr>
+                ))}
+                {payments.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="p-16 sm:p-24 text-center text-[10px] font-black uppercase text-slate-300 italic">Geen betalingen gevonden</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     );
@@ -210,8 +212,8 @@ const CustomerPortal: React.FC = () => {
 
   if (activeView === 'Berichten') {
     return (
-      <div className="flex flex-col lg:flex-row gap-8 h-[calc(100vh-160px)] animate-in fade-in">
-        <div className="flex-1 bg-white rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col overflow-hidden">
+      <div className="flex flex-col lg:flex-row gap-8 h-auto lg:h-[calc(100vh-160px)] animate-in fade-in">
+        <div className="flex-1 min-h-[400px] bg-white rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col overflow-hidden">
           <div className="p-8 border-b border-slate-50 flex items-center justify-between">
             <h2 className="text-sm font-black uppercase tracking-widest text-slate-900">Project Chat</h2>
             {isTranslating && <span className="text-[8px] font-black text-[#8C7864] animate-pulse">Vertaald door AI...</span>}
@@ -252,9 +254,9 @@ const CustomerPortal: React.FC = () => {
             </button>
           </form>
         </div>
-        <div className="w-full lg:w-80 bg-white rounded-[2.5rem] border border-slate-100 p-8">
+        <div className="w-full lg:w-80 bg-white rounded-[2.5rem] border border-slate-100 p-8 shrink-0">
            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-8 border-b border-slate-50 pb-4">Meldingen</h3>
-           <div className="space-y-4 h-full overflow-y-auto custom-scrollbar">
+           <div className="space-y-4 max-h-48 lg:max-h-none lg:h-[calc(100%-64px)] overflow-y-auto custom-scrollbar">
               {notifications.map(n => (
                 <div key={n.id} className={`p-4 rounded-2xl border ${n.isRead ? 'bg-white border-slate-50 opacity-50' : 'bg-[#8C7864]/5 border-[#8C7864]/10'}`}>
                   <p className="text-[11px] font-bold text-slate-700">{n.text}</p>
@@ -294,41 +296,43 @@ const CustomerPortal: React.FC = () => {
           </div>
         </div>
         <div className="bg-white rounded-[2.5rem] border border-slate-100 overflow-hidden">
-          <table className="w-full text-left">
-            <thead className="bg-slate-50/50">
-              <tr>
-                <th className="p-8 text-[10px] font-black uppercase text-slate-400">Bestand</th>
-                <th className="p-8 text-[10px] font-black uppercase text-slate-400">Datum</th>
-                <th className="p-8 text-[10px] font-black uppercase text-slate-400">Grootte</th>
-                <th className="p-8 text-right"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
-              {docs.map(doc => (
-                <tr key={doc.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="p-8">
-                    <div className="text-sm font-black text-slate-900 uppercase tracking-tight">{doc.fileName}</div>
-                    <div className="text-[9px] text-slate-400 uppercase font-bold">Door: {doc.uploadedBy}</div>
-                  </td>
-                  <td className="p-8 text-xs text-slate-500 font-bold">{doc.date}</td>
-                  <td className="p-8 text-xs text-slate-500 font-bold">{doc.size}</td>
-                  <td className="p-8 text-right">
-                    <div className="flex justify-end gap-2">
-                       <button onClick={() => downloadFile(doc.externalUrl || '', doc.fileName)} className="w-10 h-10 bg-slate-900 text-white rounded-xl shadow-lg hover:bg-[#8C7864] transition-all flex items-center justify-center">📥</button>
-                       {doc.uploadedBy === user?.name && (
-                         <button onClick={() => dataService.deleteDocument(doc.id).then(refreshDocs)} className="w-10 h-10 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all flex items-center justify-center">🗑️</button>
-                       )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {docs.length === 0 && (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left min-w-[440px]">
+              <thead className="bg-slate-50/50">
                 <tr>
-                  <td colSpan={4} className="p-24 text-center text-[10px] font-black uppercase text-slate-300 italic">Nog geen documenten aanwezig in uw dossier</td>
+                  <th className="px-6 py-4 sm:p-8 text-[10px] font-black uppercase text-slate-400">Bestand</th>
+                  <th className="px-6 py-4 sm:p-8 text-[10px] font-black uppercase text-slate-400">Datum</th>
+                  <th className="px-6 py-4 sm:p-8 text-[10px] font-black uppercase text-slate-400">Grootte</th>
+                  <th className="px-6 py-4 sm:p-8 text-right"></th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {docs.map(doc => (
+                  <tr key={doc.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-6 py-4 sm:p-8">
+                      <div className="text-sm font-black text-slate-900 uppercase tracking-tight">{doc.fileName}</div>
+                      <div className="text-[9px] text-slate-400 uppercase font-bold">Door: {doc.uploadedBy}</div>
+                    </td>
+                    <td className="px-6 py-4 sm:p-8 text-xs text-slate-500 font-bold">{doc.date}</td>
+                    <td className="px-6 py-4 sm:p-8 text-xs text-slate-500 font-bold">{doc.size}</td>
+                    <td className="px-6 py-4 sm:p-8 text-right">
+                      <div className="flex justify-end gap-2">
+                         <button onClick={() => downloadFile(doc.externalUrl || '', doc.fileName)} className="w-10 h-10 bg-slate-900 text-white rounded-xl shadow-lg hover:bg-[#8C7864] transition-all flex items-center justify-center">📥</button>
+                         {doc.uploadedBy === user?.name && (
+                           <button onClick={() => dataService.deleteDocument(doc.id).then(refreshDocs)} className="w-10 h-10 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all flex items-center justify-center">🗑️</button>
+                         )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {docs.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="p-16 sm:p-24 text-center text-[10px] font-black uppercase text-slate-300 italic">Nog geen documenten aanwezig in uw dossier</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     );
@@ -352,9 +356,9 @@ const CustomerPortal: React.FC = () => {
               )}
             </div>
           </div>
-          <div className="bg-white p-12 rounded-[2.5rem] border border-slate-100 shadow-sm text-slate-900 h-fit sticky top-8">
-             <h2 className="text-4xl font-black uppercase tracking-tighter mb-4">{currentPackage?.name || 'Pakket laden...'}</h2>
-             <div className="space-y-8 mt-12">
+          <div className="bg-white p-6 sm:p-12 rounded-[2.5rem] border border-slate-100 shadow-sm text-slate-900 h-fit sticky top-8">
+             <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tighter mb-4">{currentPackage?.name || 'Pakket laden...'}</h2>
+             <div className="space-y-8 mt-10 sm:mt-12">
                 <div>
                    <h3 className="text-sm font-black uppercase text-slate-400 border-b border-slate-50 pb-4 tracking-widest mb-6">Inbegrepen Inhoud</h3>
                    <ul className="space-y-5">
@@ -366,6 +370,12 @@ const CustomerPortal: React.FC = () => {
                       ))}
                    </ul>
                 </div>
+                {currentPackage?.description && (
+                  <div className="pt-8 border-t border-slate-50">
+                    <h3 className="text-sm font-black uppercase text-slate-400 tracking-widest mb-4">Pakketomschrijving</h3>
+                    <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">{currentPackage.description}</p>
+                  </div>
+                )}
              </div>
           </div>
         </div>
@@ -392,8 +402,8 @@ const CustomerPortal: React.FC = () => {
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-12">
         {/* Apartment Card */}
         <div className="bg-white rounded-[3rem] border border-slate-100 overflow-hidden group hover:shadow-2xl transition-all duration-500">
-          <div className="p-12">
-             <div className="h-72 rounded-[2.5rem] overflow-hidden mb-12 shadow-2xl relative">
+          <div className="p-6 sm:p-12">
+             <div className="h-60 sm:h-72 rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden mb-8 sm:mb-12 shadow-2xl relative">
                 <img src={activeProject?.additionalPhotos?.[0]} className="w-full h-full object-cover group-hover:scale-105 transition-all duration-1000" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                 <h3 className="absolute bottom-10 left-10 text-2xl font-black text-white uppercase tracking-tighter">Uw Nieuwe Thuis</h3>
@@ -439,8 +449,8 @@ const CustomerPortal: React.FC = () => {
 
         {/* Package Card */}
         <div className="bg-white rounded-[3rem] border border-slate-100 overflow-hidden group hover:shadow-2xl transition-all duration-500 flex flex-col h-full">
-          <div className="p-12 flex flex-col flex-1">
-             <div className="h-72 rounded-[2.5rem] overflow-hidden mb-12 shadow-2xl relative">
+          <div className="p-6 sm:p-12 flex flex-col flex-1">
+             <div className="h-60 sm:h-72 rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden mb-8 sm:mb-12 shadow-2xl relative">
                 <img src={currentPackage?.photos?.[0]} className="w-full h-full object-cover group-hover:scale-105 transition-all duration-1000" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                 <h3 className="absolute bottom-10 left-10 text-2xl font-black text-white uppercase tracking-tighter">Geselecteerd Pakket</h3>
