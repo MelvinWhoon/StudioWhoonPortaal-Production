@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import { dataService } from '../dataService';
 import { MasterPackage, Project } from '../types';
 import { getVimeoEmbedUrl } from '../App';
-import { IMAGES } from '../constants';
 
 interface DemoPageProps {
   projectId: string;
@@ -79,10 +78,8 @@ const DemoPage: React.FC<DemoPageProps> = ({ projectId }) => {
         <header className="bg-white/80 backdrop-blur-sm border-b border-slate-100 sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-6 md:px-10 h-20 flex items-center justify-between">
             <div className="flex items-center gap-4">
-              {project?.logoUrl ? (
+              {project?.logoUrl && (
                 <img src={project.logoUrl} alt={project.name} className="h-9 w-auto object-contain" referrerPolicy="no-referrer" />
-              ) : (
-                <img src={IMAGES.LOGO} alt="Studio Whoon" className="h-9 w-auto object-contain" />
               )}
               <div className="h-6 w-px bg-slate-200 hidden sm:block" />
               <span className="text-sm font-black uppercase tracking-tighter text-slate-900 hidden sm:block">
@@ -191,23 +188,6 @@ const DemoPage: React.FC<DemoPageProps> = ({ projectId }) => {
           )}
         </main>
 
-        {/* Footer */}
-        <footer className="mt-20 border-t border-black/10 py-10">
-          <div className="max-w-7xl mx-auto px-6 md:px-10 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <img src={IMAGES.LOGO} alt="Studio Whoon" className="h-6 w-auto object-contain opacity-60" />
-              <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Studio Whoon</span>
-            </div>
-            <a
-              href="https://www.whoon.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[9px] font-black uppercase tracking-widest text-[#8C7864] hover:underline"
-            >
-              whoon.com →
-            </a>
-          </div>
-        </footer>
       </div>
 
       {/* Package detail modal */}
@@ -382,17 +362,6 @@ const PackageModal: React.FC<{ pkg: MasterPackage; onClose: () => void }> = ({ p
                 </div>
               )}
 
-              <div className="border-t border-slate-100 pt-6">
-                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2">Interesse in dit pakket?</p>
-                <a
-                  href="https://www.whoon.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-6 py-3.5 bg-[#8C7864] text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-[#8C7864]/20 hover:brightness-110 transition-all"
-                >
-                  Neem contact op →
-                </a>
-              </div>
             </div>
           </div>
         </div>
