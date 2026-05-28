@@ -15,9 +15,16 @@ export enum ProjectStatus {
 export interface PackageOption {
   id: string;
   name: string;
-  category: string; 
+  category: string;
   description: string;
   fixedPhotos: string[];
+}
+
+export interface PackageExtra {
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
 }
 
 export interface MasterPackage {
@@ -31,6 +38,7 @@ export interface MasterPackage {
   photos?: string[];
   description?: string; // Vrije tekst uitleg over het pakket
   vimeoUrl?: string;   // Optionele Vimeo sfeerfilm URL
+  extras?: PackageExtra[]; // Optionele betaalde extra's per pakket
 }
 
 export interface Project {
@@ -87,7 +95,7 @@ export interface User {
   exceptions?: UserException[];
   masterPackageId?: string; 
   agreedPackagePrice?: number;
-  selectedOptionIds?: string[];
+  selectedExtraIds?: string[];
   createdAt?: string;
   apartmentDetails?: {
     surface: number;

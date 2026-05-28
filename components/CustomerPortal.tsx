@@ -153,6 +153,8 @@ const CustomerPortal: React.FC = () => {
   };
 
   const currentPackage = packages.find(mp => mp.id === user?.masterPackageId);
+  const selectedExtras = (currentPackage?.extras || []).filter(ex => (user?.selectedExtraIds || []).includes(ex.id));
+  const extrasTotal = selectedExtras.reduce((sum, ex) => sum + ex.price, 0);
 
   if (activeView === 'Financieel') {
     const totalCosts = user?.agreedPackagePrice || 0;
@@ -186,6 +188,30 @@ const CustomerPortal: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {selectedExtras.length > 0 && (
+          <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-50">
+              <h2 className="text-xs font-black uppercase tracking-widest text-slate-900">Kostenopbouw</h2>
+            </div>
+            <div className="p-6 space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-slate-500 font-bold">Basispakket — {currentPackage?.name}</span>
+                <span className="text-sm font-black text-slate-900">€{(currentPackage?.price || 0).toLocaleString('nl-NL')}</span>
+              </div>
+              {selectedExtras.map(extra => (
+                <div key={extra.id} className="flex justify-between items-center pl-4">
+                  <span className="text-sm text-slate-500 font-bold">+ {extra.name}</span>
+                  <span className="text-sm font-black text-[#8C7864]">€{extra.price.toLocaleString('nl-NL')}</span>
+                </div>
+              ))}
+              <div className="flex justify-between items-center pt-4 border-t border-slate-100">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-900">Afgesproken Totaalprijs</span>
+                <span className="text-lg font-black text-slate-900">€{(user?.agreedPackagePrice || 0).toLocaleString('nl-NL')}</span>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-50">
@@ -453,6 +479,30 @@ const CustomerPortal: React.FC = () => {
                       ))}
                    </ul>
                 </div>
+                {selectedExtras.length > 0 && (
+                  <div className="pt-5 border-t border-slate-50">
+                    <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-4">Uw Extra's</h3>
+                    <ul className="space-y-3">
+                      {selectedExtras.map(extra => (
+                        <li key={extra.id} className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <span className="w-1.5 h-1.5 bg-[#8C7864] rounded-full shrink-0" />
+                            <div className="min-w-0">
+                              <span className="text-sm font-bold text-slate-700 block truncate">{extra.name}</span>
+                              {extra.description && <span className="text-[10px] text-slate-400 block truncate">{extra.description}</span>}
+                            </div>
+                          </div>
+                          <span className="text-sm font-black text-[#8C7864] shrink-0">€{extra.price.toLocaleString('nl-NL')}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="flex items-center justify-between pt-4 mt-4 border-t border-slate-100">
+                      <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Totaal Extra's</span>
+                      <span className="text-base font-black text-slate-900">€{extrasTotal.toLocaleString('nl-NL')}</span>
+                    </div>
+                  </div>
+                )}
+
                 {currentPackage?.description && (
                   <div className="pt-5 border-t border-slate-50">
                     <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-3">Pakketomschrijving</h3>

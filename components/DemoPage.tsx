@@ -355,6 +355,28 @@ const PackageModal: React.FC<{ pkg: MasterPackage; onClose: () => void }> = ({ p
                 </div>
               )}
 
+              {(pkg.extras || []).length > 0 && (
+                <div className="border-t border-slate-100 pt-6">
+                  <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-5">
+                    Optionele Extra's
+                  </h3>
+                  <ul className="space-y-3">
+                    {(pkg.extras || []).map(extra => (
+                      <li key={extra.id} className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <span className="w-2 h-2 bg-slate-300 rounded-full shrink-0" />
+                          <div className="min-w-0">
+                            <span className="text-sm font-bold text-slate-700 block">{extra.name}</span>
+                            {extra.description && <span className="text-[10px] text-slate-400">{extra.description}</span>}
+                          </div>
+                        </div>
+                        <span className="text-sm font-black text-[#8C7864] shrink-0">+€{extra.price.toLocaleString('nl-NL')}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
               {pkg.description && (
                 <div className="border-t border-slate-100 pt-6">
                   <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4">Omschrijving</h3>

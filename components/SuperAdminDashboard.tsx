@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useAuth, useTranslation, getVimeoEmbedUrl } from '../App';
 import { dataService } from '../dataService';
-import { Project, MasterPackage, User, UserRole, ProjectStatus, Message, UserException } from '../types';
+import { Project, MasterPackage, PackageExtra, User, UserRole, ProjectStatus, Message, UserException } from '../types';
 import { exportToCsv } from '../downloadUtils';
 import DashboardStats from './DashboardStats';
 import CreateUserPage from './CreateUserPage';
@@ -127,6 +127,7 @@ const SuperAdminDashboard: React.FC = () => {
   const [newPackage, setNewPackage] = useState<Partial<MasterPackage>>({ inclusions: [], projectId: '', category: 'Standaard', photos: [] });
   const [newCategoryInput, setNewCategoryInput] = useState('');
   const [newInclusionInput, setNewInclusionInput] = useState('');
+  const [newExtraInput, setNewExtraInput] = useState<{ name: string; description: string; price: string }>({ name: '', description: '', price: '' });
   const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
   const [categoryRenames, setCategoryRenames] = useState<Record<string, string>>({});
   const [generatedPass, setGeneratedPass] = useState<string | null>(null);
@@ -313,7 +314,7 @@ const SuperAdminDashboard: React.FC = () => {
       }
       setIsPackageModalOpen(false);
       setEditingPackageId(null);
-      setNewPackage({ inclusions: [], projectId: '', category: 'Standaard', photos: [] });
+      setNewPackage({ inclusions: [], projectId: '', category: 'Standaard', photos: [], extras: [] }); setNewExtraInput({ name: '', description: '', price: '' });
       setNewCategoryInput('');
       await refreshData();
       setFeedback({ title: "Pakket Opgeslagen", type: 'success' });
@@ -747,7 +748,7 @@ const SuperAdminDashboard: React.FC = () => {
                       {uniqueCategories.map(c => <option key={c} value={c}>{c.toUpperCase()}</option>)}
                    </select>
                    <button onClick={() => { setCategoryRenames({}); setIsCategoryManagerOpen(true); }} className="px-6 py-3 bg-white border border-slate-100 text-slate-600 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-sm active:scale-95 transition-all">⚙️ Categorieën</button>
-                   <button onClick={() => { setEditingPackageId(null); setNewPackage({ inclusions: [], projectId: '', category: 'Standaard', photos: [] }); setIsPackageModalOpen(true); }} className="px-6 py-3 bg-[#8C7864] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-[#8C7864]/20 active:scale-95 transition-all">Nieuw Pakket</button>
+                   <button onClick={() => { setEditingPackageId(null); setNewPackage({ inclusions: [], projectId: '', category: 'Standaard', photos: [], extras: [] }); setNewExtraInput({ name: '', description: '', price: '' }); setIsPackageModalOpen(true); }} className="px-6 py-3 bg-[#8C7864] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-[#8C7864]/20 active:scale-95 transition-all">Nieuw Pakket</button>
                 </div>
              </div>
              
@@ -965,6 +966,22 @@ const SuperAdminDashboard: React.FC = () => {
     }));
   };
 
+  const addExtra = () => {
+    if (!newExtraInput.name.trim() || !newExtraInput.price) return;
+    const extra: PackageExtra = {
+      id: `ex${Math.random().toString(36).substr(2, 7)}`,
+      name: newExtraInput.name.trim(),
+      description: newExtraInput.description.trim() || undefined,
+      price: parseFloat(newExtraInput.price),
+    };
+    setNewPackage(prev => ({ ...prev, extras: [...(prev.extras || []), extra] }));
+    setNewExtraInput({ name: '', description: '', price: '' });
+  };
+
+  const removeExtra = (index: number) => {
+    setNewPackage(prev => ({ ...prev, extras: (prev.extras || []).filter((_, i) => i !== index) }));
+  };
+
   const removePackagePhoto = (index: number) => {
     setNewPackage(prev => ({
       ...prev,
@@ -1128,7 +1145,7 @@ const SuperAdminDashboard: React.FC = () => {
                           <select className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold" value={newUser.masterPackageId || ''} onChange={e=>{
                             const pkgId = e.target.value;
                             const pkg = masterPackages.find(p => p.id === pkgId);
-                            setNewUser({...newUser, masterPackageId: pkgId, agreedPackagePrice: pkg?.price || undefined});
+                            setNewUser({...newUser, masterPackageId: pkgId, agreedPackagePrice: pkg?.price || undefined, selectedExtraIds: []});
                           }}>
                             <option value="">GEEN PAKKET</option>
                             {masterPackages.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -1139,6 +1156,49 @@ const SuperAdminDashboard: React.FC = () => {
                           <input type="number" placeholder="Prijs" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none" value={newUser.agreedPackagePrice || ''} onChange={e=>setNewUser({...newUser, agreedPackagePrice: Number(e.target.value)})} />
                         </div>
                       </div>
+
+                      {/* Extras checkboxes — only shown when a package with extras is selected */}
+                      {(() => {
+                        const selPkg = masterPackages.find(p => p.id === newUser.masterPackageId);
+                        const pkgExtras = selPkg?.extras || [];
+                        if (!pkgExtras.length) return null;
+                        return (
+                          <div>
+                            <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block">Optionele Extra's</label>
+                            <div className="space-y-2 p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                              {pkgExtras.map(extra => {
+                                const isChecked = (newUser.selectedExtraIds || []).includes(extra.id);
+                                return (
+                                  <label key={extra.id} className="flex items-center gap-3 cursor-pointer group">
+                                    <input
+                                      type="checkbox"
+                                      checked={isChecked}
+                                      onChange={e => {
+                                        const current = newUser.selectedExtraIds || [];
+                                        const updated = e.target.checked
+                                          ? [...current, extra.id]
+                                          : current.filter(id => id !== extra.id);
+                                        const basePrice = selPkg?.price || 0;
+                                        const extrasSum = updated.reduce((sum, id) => {
+                                          return sum + (pkgExtras.find(ex => ex.id === id)?.price || 0);
+                                        }, 0);
+                                        setNewUser({ ...newUser, selectedExtraIds: updated, agreedPackagePrice: basePrice + extrasSum });
+                                      }}
+                                      className="w-4 h-4 rounded accent-[#8C7864]"
+                                    />
+                                    <span className="flex-1 text-xs font-bold text-slate-700 group-hover:text-slate-900">{extra.name}</span>
+                                    {extra.description && <span className="text-[9px] text-slate-400 italic mr-2">{extra.description}</span>}
+                                    <span className="text-xs font-black text-[#8C7864] shrink-0">+€{extra.price.toLocaleString('nl-NL')}</span>
+                                  </label>
+                                );
+                              })}
+                            </div>
+                            <p className="text-[9px] text-slate-400 font-bold mt-1.5 pl-1">
+                              Prijs wordt automatisch berekend: basispakket + aangevinkte extra's
+                            </p>
+                          </div>
+                        );
+                      })()}
                   </div>
                   <div className="flex gap-4 mt-12">
                       <button type="submit" disabled={isLoading} className="flex-1 py-5 bg-[#8C7864] text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-[#8C7864]/20 active:scale-95 transition-all">
@@ -1415,6 +1475,56 @@ const SuperAdminDashboard: React.FC = () => {
                            value={newPackage.description || ''}
                            onChange={e => setNewPackage({...newPackage, description: e.target.value})}
                         />
+                     </div>
+
+                     <div>
+                        <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block">Optionele Extra's</label>
+                        <div className="space-y-2 mb-3">
+                           <div className="flex gap-2">
+                              <input
+                                 placeholder="Naam (bijv. Verlichting)"
+                                 className="flex-1 p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none text-sm"
+                                 value={newExtraInput.name}
+                                 onChange={e => setNewExtraInput({ ...newExtraInput, name: e.target.value })}
+                                 onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addExtra())}
+                              />
+                              <div className="relative">
+                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold">€</span>
+                                 <input
+                                    type="number"
+                                    placeholder="Prijs"
+                                    className="w-28 pl-8 pr-3 p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none text-sm"
+                                    value={newExtraInput.price}
+                                    onChange={e => setNewExtraInput({ ...newExtraInput, price: e.target.value })}
+                                    onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addExtra())}
+                                 />
+                              </div>
+                              <button type="button" onClick={addExtra} className="w-10 h-10 bg-slate-900 text-white rounded-xl font-bold text-lg shrink-0">+</button>
+                           </div>
+                           <input
+                              placeholder="Omschrijving (optioneel)"
+                              className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none text-sm"
+                              value={newExtraInput.description}
+                              onChange={e => setNewExtraInput({ ...newExtraInput, description: e.target.value })}
+                           />
+                        </div>
+                        <div className="max-h-40 overflow-y-auto space-y-2 border border-slate-50 p-3 rounded-2xl bg-slate-50/50">
+                           {(newPackage.extras || []).map((extra, i) => (
+                              <div key={extra.id} className="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-100 shadow-sm gap-3">
+                                 <div className="min-w-0">
+                                    <span className="text-[10px] font-black uppercase text-slate-700 block truncate">{extra.name}</span>
+                                    {extra.description && <span className="text-[9px] text-slate-400 block truncate">{extra.description}</span>}
+                                 </div>
+                                 <div className="flex items-center gap-2 shrink-0">
+                                    <span className="text-[10px] font-black text-[#8C7864]">€{extra.price.toLocaleString('nl-NL')}</span>
+                                    <button type="button" onClick={() => removeExtra(i)} className="w-6 h-6 flex items-center justify-center text-red-400 hover:text-red-600">✕</button>
+                                 </div>
+                              </div>
+                           ))}
+                           {(!newPackage.extras || newPackage.extras.length === 0) && (
+                              <div className="text-center py-4 text-[9px] font-black text-slate-300 uppercase italic">Nog geen extra's toegevoegd</div>
+                           )}
+                        </div>
                      </div>
 
                      <div>

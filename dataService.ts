@@ -273,7 +273,8 @@ class DataService {
       createdAt: u.created_at,
       apartmentDetails: typeof u.apartment_details === 'string' ? JSON.parse(u.apartment_details) : (u.apartment_details || {}),
       constructionProgress: typeof u.construction_progress === 'string' ? JSON.parse(u.construction_progress) : (u.construction_progress || {}),
-      exceptions: typeof u.exceptions === 'string' ? JSON.parse(u.exceptions) : (u.exceptions || [])
+      exceptions: typeof u.exceptions === 'string' ? JSON.parse(u.exceptions) : (u.exceptions || []),
+      selectedExtraIds: typeof u.selected_extra_ids === 'string' ? JSON.parse(u.selected_extra_ids) : (u.selected_extra_ids || [])
     }));
   }
 
@@ -302,6 +303,7 @@ class DataService {
         construction_progress: JSON.stringify(userData.constructionProgress || {}),
         remarks: userData.remarks,
         exceptions: JSON.stringify(userData.exceptions || []),
+        selected_extra_ids: JSON.stringify(userData.selectedExtraIds || []),
         created_at: new Date().toISOString()
       }]);
     
@@ -336,7 +338,8 @@ class DataService {
         apartment_details: updates.apartmentDetails ? JSON.stringify(updates.apartmentDetails) : undefined,
         construction_progress: updates.constructionProgress ? JSON.stringify(updates.constructionProgress) : undefined,
         remarks: updates.remarks,
-        exceptions: updates.exceptions ? JSON.stringify(updates.exceptions) : undefined
+        exceptions: updates.exceptions ? JSON.stringify(updates.exceptions) : undefined,
+        selected_extra_ids: updates.selectedExtraIds !== undefined ? JSON.stringify(updates.selectedExtraIds) : undefined
       })
       .eq('id', id);
     
@@ -588,7 +591,8 @@ class DataService {
         inclusions: typeof p.inclusions === 'string' ? JSON.parse(p.inclusions) : (p.inclusions || []),
         photos: typeof p.photos === 'string' ? JSON.parse(p.photos) : (p.photos || []),
         description: p.description || '',
-        vimeoUrl: p.vimeo_url || undefined
+        vimeoUrl: p.vimeo_url || undefined,
+        extras: typeof p.extras === 'string' ? JSON.parse(p.extras) : (p.extras || [])
       }));
     } catch (e: any) {
       console.error('Error fetching master packages:', e);
@@ -610,7 +614,8 @@ class DataService {
         photos: JSON.stringify(pkg.photos || []),
         option_ids: JSON.stringify(pkg.optionIds || []),
         ...(pkg.description !== undefined && pkg.description !== null && pkg.description !== '' ? { description: pkg.description } : {}),
-        ...(pkg.vimeoUrl !== undefined ? { vimeo_url: pkg.vimeoUrl || null } : {})
+        ...(pkg.vimeoUrl !== undefined ? { vimeo_url: pkg.vimeoUrl || null } : {}),
+        extras: JSON.stringify(pkg.extras || [])
       }]);
     
     if (error) {
@@ -634,7 +639,8 @@ class DataService {
         photos: updates.photos ? JSON.stringify(updates.photos) : undefined,
         option_ids: updates.optionIds ? JSON.stringify(updates.optionIds) : undefined,
         ...(updates.description !== undefined ? { description: updates.description } : {}),
-        ...(updates.vimeoUrl !== undefined ? { vimeo_url: updates.vimeoUrl || null } : {})
+        ...(updates.vimeoUrl !== undefined ? { vimeo_url: updates.vimeoUrl || null } : {}),
+        ...(updates.extras !== undefined ? { extras: JSON.stringify(updates.extras) } : {})
       })
       .eq('id', id);
     
