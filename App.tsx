@@ -88,46 +88,60 @@ export const useMessageTranslation = (messages: Message[], targetLang: Language)
   return { translatedMessages, isTranslating };
 };
 
-// Programmatically trigger Google Translate for full-page translation.
-// Relies on the hidden .google_translate_element div always being in the DOM.
+/**
+ * Programmatically trigger Google Translate for full-page translation.
+ *
+ * The actual widget lives in the hidden #google_translate_element div
+ * (initialised in index.html before React boots, no race conditions).
+ * We just find the combo <select> it renders and drive it.
+ */
 export const triggerGoogleTranslate = (targetLang: string) => {
-  const selectEl = document.querySelector<HTMLSelectElement>('select.goog-te-combo');
+  const apply = (): boolean => {
+    const sel = document.querySelector<HTMLSelectElement>('select.goog-te-combo');
+    if (!sel) return false;
 
-  if (targetLang === 'nl') {
-    // Restore original Dutch: clear cookie, then trigger "show original" via the select
-    const exp = new Date(0).toUTCString();
-    document.cookie = `googtrans=; path=/; expires=${exp}`;
-    document.cookie = `googtrans=; path=/; domain=.${window.location.hostname}; expires=${exp}`;
-    if (selectEl) {
-      // Setting value to '' signals Google Translate to restore original
-      selectEl.value = '';
-      selectEl.dispatchEvent(new Event('change', { bubbles: true }));
-    } else {
-      // Try the close button inside the GT banner iframe
+    if (targetLang === 'nl') {
+      // Strategy 1: use the GT widget's own restore() method (no cross-origin needed)
+      try {
+        const gt = (window as any).google?.translate?.TranslateElement;
+        const instance = gt?.getInstance?.() ?? gt?.instances?.[0];
+        if (instance?.restore) { instance.restore(); return true; }
+      } catch (_) {}
+
+      // Strategy 2: click the "show original" button in the GT banner iframe
+      // (the iframe is off-screen but still in DOM, so its document is accessible
+      //  on the same origin in newer GT versions; cross-origin catch handles the rest)
       try {
         const banner = document.querySelector<HTMLIFrameElement>('.goog-te-banner-frame');
-        const doc = banner?.contentDocument || banner?.contentWindow?.document;
-        const closeBtn = doc?.querySelector<HTMLElement>('.goog-close-link, [id*="restore"]');
-        closeBtn?.click();
-      } catch (_) { /* cross-origin – ignore */ }
-    }
-  } else {
-    if (selectEl) {
-      selectEl.value = targetLang;
-      selectEl.dispatchEvent(new Event('change', { bubbles: true }));
-    } else {
-      // Widget not yet ready (script still loading) – retry after a short delay
-      const attempt = (tries: number) => {
-        const el = document.querySelector<HTMLSelectElement>('select.goog-te-combo');
-        if (el) {
-          el.value = targetLang;
-          el.dispatchEvent(new Event('change', { bubbles: true }));
-        } else if (tries > 0) {
-          setTimeout(() => attempt(tries - 1), 600);
+        const doc = banner?.contentDocument ?? banner?.contentWindow?.document;
+        if (doc) {
+          const btn = doc.querySelector<HTMLElement>(
+            '.goog-close-link, .VIpgJd-ZVi9od-ORHb-OEVmcd-ibnC6b, [onclick*="restore"]'
+          );
+          if (btn) { btn.click(); return true; }
         }
-      };
-      attempt(5);
+      } catch (_) { /* cross-origin – silently ignored */ }
+
+      // Strategy 3: clear the googtrans cookie and reset the combo to ""
+      const exp = new Date(0).toUTCString();
+      document.cookie = `googtrans=; path=/; expires=${exp}`;
+      document.cookie = `googtrans=; path=/; domain=.${window.location.hostname}; expires=${exp}`;
+      document.cookie = `googtrans=; path=/; domain=${window.location.hostname}; expires=${exp}`;
+      sel.value = '';
+      sel.dispatchEvent(new Event('change', { bubbles: true }));
+    } else {
+      sel.value = targetLang;
+      sel.dispatchEvent(new Event('change', { bubbles: true }));
     }
+    return true;
+  };
+
+  // If the widget combo isn't in the DOM yet (still loading), retry every 400 ms
+  if (!apply()) {
+    let n = 0;
+    const id = setInterval(() => {
+      if (apply() || ++n >= 20) clearInterval(id); // give up after ~8 s
+    }, 400);
   }
 };
 
@@ -162,41 +176,7 @@ const App: React.FC = () => {
       }
     };
     init();
-
-    // Add Google Translate script globally
-    const initGoogleTranslate = () => {
-      if ((window as any).google && (window as any).google.translate && (window as any).google.translate.TranslateElement) {
-        const gtElements = document.querySelectorAll('.google_translate_element');
-        gtElements.forEach(el => {
-          if (el.innerHTML.trim() === '') {
-            try {
-              new (window as any).google.translate.TranslateElement(
-                { pageLanguage: 'nl', autoDisplay: false },
-                el
-              );
-            } catch (e) {
-              console.error('Error initializing Google Translate:', e);
-            }
-          }
-        });
-      }
-    };
-
-    if (!document.getElementById('google-translate-script')) {
-      (window as any).googleTranslateElementInit = initGoogleTranslate;
-      
-      const addScript = document.createElement('script');
-      addScript.id = 'google-translate-script';
-      addScript.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
-      addScript.async = true;
-      document.body.appendChild(addScript);
-    } else {
-      if ((window as any).google && (window as any).google.translate) {
-        initGoogleTranslate();
-      } else {
-        setTimeout(initGoogleTranslate, 500);
-      }
-    }
+    // Google Translate is now initialised in index.html before React boots — no work needed here.
   }, []);
 
   useEffect(() => {
@@ -204,6 +184,15 @@ const App: React.FC = () => {
       setActiveView('Nieuwe Klant');
     }
   }, [user]);
+
+  // Re-apply translation whenever the user navigates to a different view.
+  // React re-renders replace GT's <font> wrappers, so we must re-trigger.
+  useEffect(() => {
+    if (lang !== 'nl') {
+      const t = setTimeout(() => triggerGoogleTranslate(lang), 150);
+      return () => clearTimeout(t);
+    }
+  }, [activeView, user]);
 
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
@@ -283,14 +272,6 @@ const App: React.FC = () => {
   return (
     <AuthContext.Provider value={{ user, login, logout, activeProject, setActiveProject, activeView, setActiveView, isSidebarOpen, setSidebarOpen }}>
       <TranslationContext.Provider value={{ t, lang, setLang }}>
-        {/* Always-mounted hidden widget so Google Translate initialises once and stays ready */}
-        <div
-          aria-hidden="true"
-          style={{ position: 'fixed', top: -9999, left: -9999, width: 1, height: 1, overflow: 'hidden', opacity: 0, pointerEvents: 'none' }}
-        >
-          <div className="google_translate_element" />
-        </div>
-
         {!user ? (
           <Login onLogin={login} isLoggingIn={isLoggingIn} />
         ) : (

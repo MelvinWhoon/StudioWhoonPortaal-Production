@@ -33,46 +33,38 @@
             background: #94a3b8;
         }
         
-        /* Hide Google Translate Banner and Branding */
-        body > .skiptranslate {
-            display: none !important;
+        /* ── Google Translate: hide UI chrome but keep banner in DOM so JS can reach it ── */
+
+        /* Move the top banner off-screen instead of display:none so we can click restore */
+        .goog-te-banner-frame.skiptranslate,
+        .skiptranslate > iframe {
+            position: fixed !important;
+            top: -500px !important;
+            left: -9999px !important;
+            width: 1px !important;
+            height: 1px !important;
+            z-index: -1 !important;
         }
-        .goog-te-banner-frame.skiptranslate {
-            display: none !important;
-            visibility: hidden !important;
-        }
+        /* Prevent GT from pushing the body down */
         body {
             top: 0px !important;
             position: static !important;
             margin-top: 0px !important;
         }
-        .goog-logo-link {
+        /* Hide the GT gadget wrapper text/logo */
+        body > .skiptranslate:not(iframe) {
+            display: none !important;
+        }
+        /* Hide GT branding/logo/tooltip elements — but NOT the widget div or restore button */
+        .goog-logo-link,
+        .goog-te-gadget img,
+        .goog-te-gadget > span > a,
+        .VIpgJd-ZVi9od-l4eHX-hSRGPd {
             display: none !important;
         }
         .goog-te-gadget {
             color: transparent !important;
-            font-size: 0px !important;
-        }
-        .goog-te-gadget .goog-te-combo {
-            color: #475569 !important;
-            font-size: 14px !important;
-            width: 100%;
-            padding: 8px;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
-            background-color: white;
-            outline: none;
-            cursor: pointer;
-            margin: 0;
-        }
-        .goog-te-gadget > span > a {
-            display: none !important;
-        }
-        .goog-te-gadget img {
-            display: none !important;
-        }
-        .VIpgJd-ZVi9od-l4eHX-hSRGPd {
-            display: none !important;
+            font-size: 0 !important;
         }
     </style>
 <script type="importmap">
@@ -89,6 +81,25 @@
 </head>
 <body>
     <div id="root"></div>
+
+    <!--
+      Google Translate widget — initialised here (before React boots) so there are
+      no race conditions.  The hidden div stays in the DOM permanently so the widget
+      only ever needs to be constructed once.
+    -->
+    <div id="google_translate_element" aria-hidden="true"
+         style="position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none">
+    </div>
+    <script>
+      function googleTranslateElementInit() {
+        new google.translate.TranslateElement(
+          { pageLanguage: 'nl', autoDisplay: false },
+          'google_translate_element'
+        );
+      }
+    </script>
+    <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async></script>
+
 <script type="module" src="/index.tsx"></script>
 </body>
 </html>

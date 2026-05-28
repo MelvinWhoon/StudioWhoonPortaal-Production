@@ -176,7 +176,7 @@ const DemoPage: React.FC<DemoPageProps> = ({ projectId }) => {
                         <div className="flex-1 h-px bg-slate-200" />
                       </div>
                     )}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                       {catPackages.map(pkg => (
                         <PackageCard key={pkg.id} pkg={pkg} onSelect={() => setSelectedPackage(pkg)} />
                       ))}
@@ -209,7 +209,7 @@ const PackageCard: React.FC<{ pkg: MasterPackage; onSelect: () => void }> = ({ p
       className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden cursor-pointer group hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 flex flex-col"
     >
       {/* Thumbnail */}
-      <div className="relative h-52 bg-slate-100 overflow-hidden">
+      <div className="relative h-36 sm:h-48 md:h-52 bg-slate-100 overflow-hidden">
         {mainPhoto ? (
           <img src={mainPhoto} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt={pkg.name} />
         ) : (
@@ -233,12 +233,12 @@ const PackageCard: React.FC<{ pkg: MasterPackage; onSelect: () => void }> = ({ p
       </div>
 
       {/* Content */}
-      <div className="p-6 flex flex-col flex-1">
-        <h3 className="text-lg font-black uppercase tracking-tighter text-slate-900 mb-4 leading-none">{pkg.name}</h3>
+      <div className="p-4 md:p-6 flex flex-col flex-1">
+        <h3 className="text-sm md:text-lg font-black uppercase tracking-tighter text-slate-900 mb-3 md:mb-4 leading-tight">{pkg.name}</h3>
         {(pkg.inclusions || []).length > 0 && (
           <ul className="space-y-2 flex-1 mb-5">
             {(pkg.inclusions || []).slice(0, 4).map((inc, i) => (
-              <li key={i} className="flex items-center gap-2.5 text-[11px] font-bold text-slate-600">
+              <li key={i} className="flex items-center gap-2 text-[10px] md:text-[11px] font-bold text-slate-600">
                 <span className="w-1.5 h-1.5 bg-[#8C7864] rounded-full shrink-0" />
                 {inc}
               </li>
@@ -272,31 +272,30 @@ const PackageModal: React.FC<{ pkg: MasterPackage; onClose: () => void }> = ({ p
 
   return (
     <div
-      className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[200] flex items-center justify-center p-4 md:p-8 overflow-y-auto"
+      className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[200] flex items-start justify-center overflow-y-auto py-6 md:py-10 px-4 md:px-8"
       onClick={handleBackdrop}
     >
-      <div className="bg-white rounded-[2rem] md:rounded-[3rem] w-full max-w-5xl shadow-2xl animate-in zoom-in-95 duration-200 my-4 relative overflow-hidden">
-        {/* Close */}
-        <button
-          onClick={onClose}
-          className="absolute top-6 right-6 z-10 w-11 h-11 bg-slate-100 hover:bg-slate-200 rounded-2xl flex items-center justify-center text-slate-600 transition-colors font-black"
-        >
-          ✕
-        </button>
-
-        <div className="p-8 md:p-12">
-          <div className="flex items-start gap-4 mb-8">
-            <div>
-              <span className="px-3 py-1 bg-[#8C7864]/10 text-[#8C7864] text-[9px] font-black uppercase tracking-widest rounded-lg">
-                {pkg.category}
-              </span>
-              <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tighter text-slate-900 mt-2 leading-none">
-                {pkg.name}
-              </h2>
-            </div>
+      <div className="bg-white rounded-[2rem] md:rounded-[3rem] w-full max-w-5xl shadow-2xl my-auto relative">
+        {/* Sticky header with close button */}
+        <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-slate-100 px-6 md:px-10 py-4 flex items-center justify-between rounded-t-[2rem] md:rounded-t-[3rem]">
+          <div>
+            <span className="px-3 py-1 bg-[#8C7864]/10 text-[#8C7864] text-[9px] font-black uppercase tracking-widest rounded-lg">
+              {pkg.category}
+            </span>
+            <h2 className="text-xl md:text-2xl font-black uppercase tracking-tighter text-slate-900 mt-1.5 leading-none">
+              {pkg.name}
+            </h2>
           </div>
+          <button
+            onClick={onClose}
+            className="w-10 h-10 bg-slate-100 hover:bg-slate-200 rounded-2xl flex items-center justify-center text-slate-600 transition-colors font-black shrink-0 ml-4"
+          >
+            ✕
+          </button>
+        </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+        <div className="p-6 md:p-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-10">
             {/* Left: media */}
             <div className="space-y-5">
               {/* Vimeo embed */}

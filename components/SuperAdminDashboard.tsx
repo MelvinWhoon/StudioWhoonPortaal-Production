@@ -1485,7 +1485,7 @@ const SuperAdminDashboard: React.FC = () => {
                                  placeholder="Naam (bijv. Verlichting)"
                                  className="flex-1 p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none text-sm"
                                  value={newExtraInput.name}
-                                 onChange={e => setNewExtraInput({ ...newExtraInput, name: e.target.value })}
+                                 onChange={e => { const v = e.target.value; setNewExtraInput(prev => ({ ...prev, name: v })); }}
                                  onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addExtra())}
                               />
                               <div className="relative">
@@ -1495,7 +1495,7 @@ const SuperAdminDashboard: React.FC = () => {
                                     placeholder="Prijs"
                                     className="w-28 pl-8 pr-3 p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none text-sm"
                                     value={newExtraInput.price}
-                                    onChange={e => setNewExtraInput({ ...newExtraInput, price: e.target.value })}
+                                    onChange={e => { const v = e.target.value; setNewExtraInput(prev => ({ ...prev, price: v })); }}
                                     onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addExtra())}
                                  />
                               </div>
@@ -1505,7 +1505,8 @@ const SuperAdminDashboard: React.FC = () => {
                               placeholder="Omschrijving (optioneel)"
                               className="w-full p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none text-sm"
                               value={newExtraInput.description}
-                              onChange={e => setNewExtraInput({ ...newExtraInput, description: e.target.value })}
+                              onChange={e => { const v = e.target.value; setNewExtraInput(prev => ({ ...prev, description: v })); }}
+                              onKeyDown={e => e.key === 'Enter' && e.preventDefault()}
                            />
                         </div>
                         <div className="max-h-40 overflow-y-auto space-y-2 border border-slate-50 p-3 rounded-2xl bg-slate-50/50">
