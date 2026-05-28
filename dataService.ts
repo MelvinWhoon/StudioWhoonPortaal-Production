@@ -587,7 +587,8 @@ class DataService {
         optionIds: typeof p.option_ids === 'string' ? JSON.parse(p.option_ids) : (p.option_ids || []),
         inclusions: typeof p.inclusions === 'string' ? JSON.parse(p.inclusions) : (p.inclusions || []),
         photos: typeof p.photos === 'string' ? JSON.parse(p.photos) : (p.photos || []),
-        description: p.description || ''
+        description: p.description || '',
+        vimeoUrl: p.vimeo_url || undefined
       }));
     } catch (e: any) {
       console.error('Error fetching master packages:', e);
@@ -608,7 +609,8 @@ class DataService {
         inclusions: JSON.stringify(pkg.inclusions || []),
         photos: JSON.stringify(pkg.photos || []),
         option_ids: JSON.stringify(pkg.optionIds || []),
-        ...(pkg.description !== undefined && pkg.description !== null && pkg.description !== '' ? { description: pkg.description } : {})
+        ...(pkg.description !== undefined && pkg.description !== null && pkg.description !== '' ? { description: pkg.description } : {}),
+        ...(pkg.vimeoUrl !== undefined ? { vimeo_url: pkg.vimeoUrl || null } : {})
       }]);
     
     if (error) {
@@ -631,7 +633,8 @@ class DataService {
         inclusions: updates.inclusions ? JSON.stringify(updates.inclusions) : undefined,
         photos: updates.photos ? JSON.stringify(updates.photos) : undefined,
         option_ids: updates.optionIds ? JSON.stringify(updates.optionIds) : undefined,
-        ...(updates.description !== undefined ? { description: updates.description } : {})
+        ...(updates.description !== undefined ? { description: updates.description } : {}),
+        ...(updates.vimeoUrl !== undefined ? { vimeo_url: updates.vimeoUrl || null } : {})
       })
       .eq('id', id);
     

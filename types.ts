@@ -30,6 +30,7 @@ export interface MasterPackage {
   inclusions?: string[];
   photos?: string[];
   description?: string; // Vrije tekst uitleg over het pakket
+  vimeoUrl?: string;   // Optionele Vimeo sfeerfilm URL
 }
 
 export interface Project {

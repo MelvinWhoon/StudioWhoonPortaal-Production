@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { useAuth, useTranslation } from '../App';
+import { useAuth, useTranslation, getVimeoEmbedUrl } from '../App';
 import { dataService } from '../dataService';
 import { Project, MasterPackage, User, UserRole, ProjectStatus, Message, UserException } from '../types';
 import { exportToCsv } from '../downloadUtils';
@@ -692,12 +692,37 @@ const SuperAdminDashboard: React.FC = () => {
                        
                        <div className="mt-8 pt-6 border-t border-slate-50 flex justify-between items-center">
                           <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{p.homesCount} Units</span>
-                          <button 
-                             onClick={() => setExpandedProjectId(isExpanded ? null : p.id)}
-                             className="text-[9px] font-black text-[#8C7864] uppercase border-b-2 border-[#8C7864] pb-0.5 hover:text-slate-900 hover:border-slate-900 transition-all"
-                          >
-                             {isExpanded ? 'Minder info' : 'Bekijk meer'}
-                          </button>
+                          <div className="flex items-center gap-3">
+                             <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const url = `${window.location.origin}/demo/${p.id}`;
+                                  navigator.clipboard.writeText(url).then(() => {
+                                    const btn = e.currentTarget as HTMLButtonElement;
+                                    const orig = btn.textContent;
+                                    btn.textContent = '✓';
+                                    setTimeout(() => { btn.textContent = orig; }, 1500);
+                                  });
+                                }}
+                                title="Kopieer demo link"
+                                className="w-7 h-7 flex items-center justify-center bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-500 transition-colors text-xs font-black"
+                             >
+                               🔗
+                             </button>
+                             <button
+                                onClick={(e) => { e.stopPropagation(); window.open(`/demo/${p.id}`, '_blank'); }}
+                                className="text-[9px] font-black text-[#8C7864] uppercase border-b-2 border-[#8C7864] pb-0.5 hover:text-slate-900 hover:border-slate-900 transition-all"
+                             >
+                                Demo pagina
+                             </button>
+                             <span className="text-slate-200">·</span>
+                             <button
+                                onClick={() => setExpandedProjectId(isExpanded ? null : p.id)}
+                                className="text-[9px] font-black text-slate-400 uppercase border-b-2 border-slate-200 pb-0.5 hover:text-slate-900 hover:border-slate-900 transition-all"
+                             >
+                                {isExpanded ? 'Minder' : 'Details'}
+                             </button>
+                          </div>
                        </div>
                     </div>
                   </div>
@@ -889,6 +914,22 @@ const SuperAdminDashboard: React.FC = () => {
                         <div className="pt-8 border-t border-slate-50">
                            <h3 className="text-sm font-black uppercase tracking-widest text-slate-400 mb-4">Pakketomschrijving</h3>
                            <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">{selectedPackageForDetail.description}</p>
+                        </div>
+                     )}
+
+                     {selectedPackageForDetail.vimeoUrl && getVimeoEmbedUrl(selectedPackageForDetail.vimeoUrl) && (
+                        <div className="pt-8 border-t border-slate-50">
+                           <h3 className="text-sm font-black uppercase tracking-widest text-slate-400 mb-4">Sfeerfilm</h3>
+                           <div className="relative w-full rounded-2xl overflow-hidden bg-slate-100" style={{ paddingBottom: '56.25%' }}>
+                              <iframe
+                                 src={getVimeoEmbedUrl(selectedPackageForDetail.vimeoUrl)!}
+                                 className="absolute inset-0 w-full h-full"
+                                 frameBorder="0"
+                                 allow="autoplay; fullscreen; picture-in-picture"
+                                 allowFullScreen
+                                 title={`Sfeerfilm ${selectedPackageForDetail.name}`}
+                              />
+                           </div>
                         </div>
                      )}
 
@@ -1269,6 +1310,28 @@ const SuperAdminDashboard: React.FC = () => {
                            value={newPackage.description || ''}
                            onChange={e => setNewPackage({...newPackage, description: e.target.value})}
                         />
+                     </div>
+
+                     <div>
+                        <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block">Sfeerfilm (Vimeo URL)</label>
+                        <input
+                           type="url"
+                           placeholder="https://vimeo.com/123456789"
+                           className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none text-sm"
+                           value={newPackage.vimeoUrl || ''}
+                           onChange={e => setNewPackage({...newPackage, vimeoUrl: e.target.value})}
+                        />
+                        {newPackage.vimeoUrl && getVimeoEmbedUrl(newPackage.vimeoUrl) && (
+                          <div className="mt-3 rounded-2xl overflow-hidden bg-slate-100 relative" style={{ paddingBottom: '56.25%' }}>
+                            <iframe
+                              src={getVimeoEmbedUrl(newPackage.vimeoUrl)!}
+                              className="absolute inset-0 w-full h-full"
+                              frameBorder="0"
+                              allow="autoplay; fullscreen"
+                              allowFullScreen
+                            />
+                          </div>
+                        )}
                      </div>
                   </div>
                </div>

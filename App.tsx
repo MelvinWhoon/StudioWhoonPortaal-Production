@@ -7,8 +7,18 @@ import Login from './components/Login';
 import SuperAdminDashboard from './components/SuperAdminDashboard';
 import ProjectAdminDashboard from './components/ProjectAdminDashboard';
 import CustomerPortal from './components/CustomerPortal';
+import DemoPage from './components/DemoPage';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
+
+// Converts a Vimeo URL to an embeddable iframe src
+export const getVimeoEmbedUrl = (url: string): string | null => {
+  if (!url) return null;
+  const match = url.match(/vimeo\.com\/(?:video\/|channels\/[^/]+\/)?(\d+)/);
+  return match
+    ? `https://player.vimeo.com/video/${match[1]}?title=0&byline=0&portrait=0&dnt=1`
+    : null;
+};
 
 interface AuthContextType {
   user: User | null;
@@ -252,6 +262,12 @@ const App: React.FC = () => {
   };
 
   const t = (key: string) => (translations[lang] as any)[key] || key;
+
+  // Public demo page — no auth required
+  const demoMatch = window.location.pathname.match(/^\/demo\/([^/]+)/);
+  if (demoMatch) {
+    return <DemoPage projectId={demoMatch[1]} />;
+  }
 
   if (isInitializing || isLoggingIn) {
     return (

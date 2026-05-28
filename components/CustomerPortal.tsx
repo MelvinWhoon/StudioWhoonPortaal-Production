@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useAuth, useTranslation, useMessageTranslation } from '../App';
+import { useAuth, useTranslation, useMessageTranslation, getVimeoEmbedUrl } from '../App';
 import { dataService } from '../dataService';
 import { PortalDocument, Message, Notification, UserRole, MasterPackage, MessageCategory } from '../types';
 import { downloadFile } from '../downloadUtils';
@@ -44,6 +44,7 @@ const CustomerPortal: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const hasShownAutoReply = useRef(false);
   const [systemMessages, setSystemMessages] = useState<Array<{id: string; text: string; date: string}>>([]);
+  const [showPackageVideo, setShowPackageVideo] = useState(false);
 
   const [isInitialLoading, setIsInitialLoading] = useState(true);
 
@@ -409,6 +410,23 @@ const CustomerPortal: React.FC = () => {
         <h1 className="text-xl font-black text-slate-900 uppercase tracking-tighter">Mijn Geselecteerde Pakket</h1>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="space-y-5">
+            {/* Sfeerfilm */}
+            {currentPackage?.vimeoUrl && getVimeoEmbedUrl(currentPackage.vimeoUrl) && (
+              <div className="space-y-3">
+                <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Sfeerfilm</h3>
+                <div className="relative w-full rounded-[1.5rem] overflow-hidden bg-slate-100 shadow-sm" style={{ paddingBottom: '56.25%' }}>
+                  <iframe
+                    src={getVimeoEmbedUrl(currentPackage.vimeoUrl)!}
+                    className="absolute inset-0 w-full h-full"
+                    frameBorder="0"
+                    allow="autoplay; fullscreen; picture-in-picture"
+                    allowFullScreen
+                    title="Sfeerfilm pakket"
+                  />
+                </div>
+              </div>
+            )}
+
             <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Alle Pakket-afbeeldingen</h3>
             <div className="grid grid-cols-1 gap-5">
               {(currentPackage?.photos || []).map((photo, i) => (
@@ -516,9 +534,39 @@ const CustomerPortal: React.FC = () => {
         <div className="bg-white rounded-[2rem] border border-slate-100 overflow-hidden group hover:shadow-xl transition-all duration-500 flex flex-col">
           <div className="p-5 sm:p-7 flex flex-col flex-1">
              <div className="h-48 sm:h-56 rounded-[1.5rem] overflow-hidden mb-5 shadow-lg relative">
-                <img src={currentPackage?.photos?.[0]} className="w-full h-full object-cover group-hover:scale-105 transition-all duration-1000" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                <h3 className="absolute bottom-4 left-5 text-base font-black text-white uppercase tracking-tighter">Geselecteerd Pakket</h3>
+                {showPackageVideo && currentPackage?.vimeoUrl && getVimeoEmbedUrl(currentPackage.vimeoUrl) ? (
+                  <div className="w-full h-full bg-black">
+                    <iframe
+                      src={`${getVimeoEmbedUrl(currentPackage.vimeoUrl)}&autoplay=1`}
+                      className="w-full h-full"
+                      frameBorder="0"
+                      allow="autoplay; fullscreen"
+                      allowFullScreen
+                      title="Sfeerfilm"
+                    />
+                    <button
+                      onClick={() => setShowPackageVideo(false)}
+                      className="absolute top-3 right-3 w-8 h-8 bg-black/60 text-white rounded-xl flex items-center justify-center text-xs font-black hover:bg-black/80 transition-colors z-10"
+                    >✕</button>
+                  </div>
+                ) : (
+                  <>
+                    <img src={currentPackage?.photos?.[0]} className="w-full h-full object-cover group-hover:scale-105 transition-all duration-1000" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                    <h3 className="absolute bottom-4 left-5 text-base font-black text-white uppercase tracking-tighter">Geselecteerd Pakket</h3>
+                    {currentPackage?.vimeoUrl && getVimeoEmbedUrl(currentPackage.vimeoUrl) && (
+                      <button
+                        onClick={() => setShowPackageVideo(true)}
+                        className="absolute top-3 right-3 w-10 h-10 bg-white/90 rounded-xl flex items-center justify-center shadow-lg hover:bg-white hover:scale-110 transition-all"
+                        title="Sfeerfilm bekijken"
+                      >
+                        <svg className="w-5 h-5 text-[#8C7864] ml-0.5" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M8 5v14l11-7z"/>
+                        </svg>
+                      </button>
+                    )}
+                  </>
+                )}
              </div>
              <h3 className="text-lg font-black uppercase tracking-tighter mb-4 text-slate-900">{currentPackage?.name || 'Nog geen pakket gekozen'}</h3>
 
