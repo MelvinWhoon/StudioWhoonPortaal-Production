@@ -804,6 +804,102 @@ const SuperAdminDashboard: React.FC = () => {
           </div>
         );
 
+      case 'Demo Links': {
+        const demoOrigin = window.location.origin;
+        return (
+          <div className="space-y-8 animate-in fade-in duration-300">
+            <div>
+              <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Demo Links</h1>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2">Stuur deze links naar potentiële klanten — geen login vereist</p>
+            </div>
+
+            {projects.length === 0 && (
+              <div className="bg-white rounded-[2rem] border border-slate-100 p-16 text-center">
+                <p className="text-slate-300 font-black uppercase text-xs tracking-widest">Nog geen projecten aangemaakt</p>
+              </div>
+            )}
+
+            <div className="space-y-6">
+              {projects.map(proj => {
+                const projPackages = masterPackages.filter(p => p.projectId === proj.id);
+                const demoUrl = `${demoOrigin}/demo/${proj.id}`;
+                return (
+                  <div key={proj.id} className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden text-slate-900">
+                    {/* Project header */}
+                    <div className="flex items-center gap-5 p-6 sm:p-8 border-b border-slate-50">
+                      {proj.logoUrl && (
+                        <img src={proj.logoUrl} alt={proj.name} className="h-10 w-auto object-contain shrink-0" referrerPolicy="no-referrer" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <h2 className="text-lg font-black uppercase tracking-tighter leading-none">{proj.name}</h2>
+                        {proj.city && <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">📍 {proj.city}</p>}
+                      </div>
+                      <span className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest shrink-0 ${
+                        proj.status === 'Actief' ? 'bg-green-50 text-green-600' : 'bg-slate-100 text-slate-500'
+                      }`}>{proj.status}</span>
+                    </div>
+
+                    <div className="p-6 sm:p-8 space-y-6">
+                      {/* Demo URL row */}
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest block">Demo pagina link</label>
+                        <div className="flex items-center gap-3 bg-slate-50 border border-slate-100 rounded-2xl p-1 pl-4">
+                          <span className="text-sm font-medium text-slate-700 flex-1 truncate">{demoUrl}</span>
+                          <div className="flex gap-2 shrink-0">
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(demoUrl);
+                              }}
+                              className="px-4 py-2.5 bg-white border border-slate-100 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-100 transition-all shadow-sm flex items-center gap-1.5"
+                            >
+                              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                              Kopieer
+                            </button>
+                            <button
+                              onClick={() => window.open(`/demo/${proj.id}`, '_blank')}
+                              className="px-4 py-2.5 bg-[#8C7864] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:brightness-110 transition-all shadow-lg shadow-[#8C7864]/20 flex items-center gap-1.5"
+                            >
+                              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                              Openen
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Packages in this project */}
+                      <div className="space-y-3">
+                        <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest block">
+                          Pakketten in dit project ({projPackages.length})
+                        </label>
+                        {projPackages.length === 0 ? (
+                          <p className="text-[10px] text-slate-300 italic font-medium">Nog geen pakketten aangemaakt voor dit project.</p>
+                        ) : (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {projPackages.map(pkg => (
+                              <div key={pkg.id} className="flex items-center gap-3 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3">
+                                {pkg.photos?.[0] && (
+                                  <div className="w-10 h-10 rounded-xl overflow-hidden shrink-0 bg-slate-200">
+                                    <img src={pkg.photos[0]} className="w-full h-full object-cover" alt={pkg.name} />
+                                  </div>
+                                )}
+                                <div className="min-w-0">
+                                  <p className="text-[11px] font-black uppercase tracking-tight text-slate-900 truncate">{pkg.name}</p>
+                                  <p className="text-[9px] font-bold text-slate-400 uppercase">{pkg.category}{pkg.vimeoUrl ? ' · 🎬' : ''}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      }
+
       case 'Uitzonderingen':
         const usersWithEx = users.filter(u => u.exceptions && u.exceptions.length > 0);
         return (
@@ -886,13 +982,21 @@ const SuperAdminDashboard: React.FC = () => {
 
       {/* PACKAGE DETAIL MODAL (Fixed 'Bekijk meer') */}
       {selectedPackageForDetail && (
-         <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[150] flex items-center justify-center p-6 overflow-y-auto">
-            <div className="bg-white rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-12 w-full max-w-5xl shadow-2xl animate-in zoom-in-95 my-8 text-slate-900 relative">
-               <button 
-                  onClick={() => setSelectedPackageForDetail(null)}
-                  className="absolute top-10 right-10 w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center hover:bg-slate-200 transition-all text-xl"
-               >✕</button>
-               
+         <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[150] flex items-start justify-center overflow-y-auto">
+            <div className="bg-white rounded-[2rem] sm:rounded-[3rem] w-full max-w-5xl shadow-2xl animate-in zoom-in-95 my-8 mx-4 sm:mx-6 text-slate-900 overflow-hidden">
+               {/* Sticky header with close button */}
+               <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-slate-100 px-6 sm:px-12 py-5 flex items-center justify-between">
+                  <div>
+                     <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-0.5">Pakket detail</p>
+                     <h2 className="text-lg font-black uppercase tracking-tighter text-slate-900 leading-none">{selectedPackageForDetail.name}</h2>
+                  </div>
+                  <button
+                     onClick={() => setSelectedPackageForDetail(null)}
+                     className="w-11 h-11 bg-slate-100 hover:bg-slate-200 rounded-2xl flex items-center justify-center text-slate-600 transition-all font-black text-base shrink-0"
+                  >✕</button>
+               </div>
+
+               <div className="p-6 sm:p-12">
                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
                   <div className="space-y-6">
                      <h2 className="text-2xl sm:text-4xl font-black uppercase tracking-tighter mb-4">{selectedPackageForDetail.name}</h2>
@@ -958,6 +1062,7 @@ const SuperAdminDashboard: React.FC = () => {
                      </div>
                   </div>
                </div>
+               </div>{/* /p-6 sm:p-12 */}
             </div>
          </div>
       )}
